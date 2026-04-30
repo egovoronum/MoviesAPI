@@ -1,0 +1,12 @@
+.pytest_cache
+.vscode
+.venv/
+.DS_Store
+/venv/
+__pycache__/
+*.db
+*.xlsx
+*.log
+*.csv
+*.env
+.env
