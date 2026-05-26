@@ -1,5 +1,5 @@
 
-# REQIEREMENTS
+# REQUIEREMENTS
 
 python-dotenv
 requests
