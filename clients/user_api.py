@@ -1,8 +1,8 @@
 from custom_requester.custom_requester import CustomRequester
 
 class UserAPI(CustomRequester):
-    def __init__(self, session):
-        super().__init__(base_url=session.base_url)
+    def __init__(self, session, base_url):
+        super().__init__(session=session, base_url=base_url)
         self.session = session
         
     def get_user_info(self, user_id, expected_status=200):
@@ -15,7 +15,7 @@ class UserAPI(CustomRequester):
     def delete_user(self, user_id, expected_status=204):
         return self.send_request(
             method="DELETE",
-            endpoint=f"/users/{user_id},
+            endpoint=f"/users/{user_id}",
             expected_status=expected_status
         )
         

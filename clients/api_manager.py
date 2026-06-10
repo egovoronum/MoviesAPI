@@ -4,6 +4,6 @@ from clients.user_api import UserAPI
 class ApiManager:
         def __init__(self, session):
             self.session = session
-            self.auth_api = AuthAPI(session)
-            self.user_api = UserAPI(session)
+            self.auth_api = AuthAPI(session, base_url)
+            self.user_api = UserAPI(session, base_url)
             

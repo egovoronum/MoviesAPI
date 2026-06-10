@@ -1,6 +1,14 @@
 from dotenv import load_dotenv
 import os
 
+def test_register_user(api_manager, test_user):
+    response = api_manager.auth_api.register_user(test_user)
+    data = response.json()
+    
+    assert data["email"] == test_user["email"]
+    assert "id" in data
+    assert "USER" in data["roles"]
+
 class TestMoviesAPI:
 
 # GET MOVIES // testing first movie in the list

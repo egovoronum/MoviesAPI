@@ -1,10 +1,15 @@
 import requests, pytest, random
-from constants import BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, REGISTER_ENDPOINT, MOVIES_ENDPOINT, AUTH_URL
+from constants import (
+    BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
+    REGISTER_ENDPOINT, MOVIES_ENDPOINT, AUTH_URL
+)
 from utils.data_generator import DataGenerator
 from faker import Faker
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
+
+from clients.api_manager import ApiManager
 
 load_dotenv()
 
@@ -13,6 +18,42 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 
+# session init 
+@pytest.fixture(scope="session")
+def session():
+    http_session = requests.Session()
+    yield http_session
+    http_session.close()
+
+# managing API
+@pytest.fixture(scope="session")
+def api_manager(session):
+    return ApiManager(
+        session, 
+        base_url=BASE_URL,
+        auth_url=AUTH_URL
+    )
+    
+# login API
+@pytest.fixture(scope="session")
+def api_login(session):
+    return AuthAPI(session, AUTH_URL)
+    
+# test user
+@pytest.fixture(scope="session")
+def test_user():
+    
+    register_data = {
+        "email": "lexluger@email.com",
+        "fullName": "Lex Luger",
+        "password": "12345678Aa",
+        "passwordRepeat": "12345678Aa"
+    }
+    
+    return register_data
+
+#######LEGACY##########
+    
 # MAIN REQUESTER 
 @pytest.fixture(scope="session")
 def requester():
