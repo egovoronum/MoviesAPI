@@ -9,7 +9,11 @@ from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
 
+# API classes import
+
 from clients.api_manager import ApiManager
+from clients.auth_api import AuthAPI
+from clients.user_api import UserAPI
 
 load_dotenv()
 
@@ -28,11 +32,7 @@ def session():
 # managing API
 @pytest.fixture(scope="session")
 def api_manager(session):
-    return ApiManager(
-        session, 
-        base_url=BASE_URL,
-        auth_url=AUTH_URL
-    )
+    return ApiManager(session)
     
 # login API
 @pytest.fixture(scope="session")
@@ -43,14 +43,31 @@ def api_login(session):
 @pytest.fixture(scope="session")
 def test_user():
     
+    password = fake.password(
+        length=12,
+        special_chars=False,
+        digits=True,
+        upper_case=True,
+        lower_case=True
+    )
+
     register_data = {
-        "email": "lexluger@email.com",
-        "fullName": "Lex Luger",
-        "password": "12345678Aa",
-        "passwordRepeat": "12345678Aa"
+        "email": fake.email(),
+        "fullName": fake.name(),
+        "password": password,
+        "passwordRepeat": password
     }
     
     return register_data
+
+
+
+
+
+
+
+
+
 
 #######LEGACY##########
     

@@ -1,8 +1,8 @@
 from custom_requester.custom_requester import CustomRequester
 
 class UserAPI(CustomRequester):
-    def __init__(self, session, base_url):
-        super().__init__(session=session, base_url=base_url)
+    def __init__(self, session):
+        super().__init__(session=session, base_url="https://auth.dev-cinescope.coconutqa.ru")
         self.session = session
         
     def get_user_info(self, user_id, expected_status=200):

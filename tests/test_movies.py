@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 
 def test_register_user(api_manager, test_user):
+    
     response = api_manager.auth_api.register_user(test_user)
     data = response.json()
     
