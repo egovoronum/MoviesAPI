@@ -46,7 +46,7 @@ def admin_api_manager():
     
     http_session.close()
 
-# managing API
+#? нигде не юзаю... managing API 
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
@@ -69,6 +69,17 @@ def api_login(session):
 
 
 #########################FIXTURES#######################################################
+
+#* admin login data
+@pytest.fixture(scope="session")
+def admin_login():
+
+    login_data = {
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
+    }
+
+    return login_data
 
 # *get user by id
 @pytest.fixture(scope="session")
@@ -126,25 +137,6 @@ def test_user(session):
 
         api.user_api.delete_user(user["id"], expected_status=200)
 
-#* admin login data
-@pytest.fixture(scope="session")
-def admin_login():
-
-    login_data = {
-        "email": ADMIN_EMAIL,
-        "password": ADMIN_PASSWORD
-    }
-
-    return login_data
-
-#* authenticate as admin
-@pytest.fixture(scope="session")
-def admin_auth(api_manager, admin_login):
-    
-    api_manager.auth_api.authenticate([admin_login["email"], admin_login["password"]])
-    
-    return api_manager
-
 ############################MOVIES######################################################
 
 # *gives a random movie ID from an int range
@@ -154,6 +146,25 @@ def movie_id():
     id = random.randint(570, 580)
 
     return id
+
+
+# *finds an existing movie and grabs ID
+@pytest.fixture(scope="session")
+def grab_movie(unauthenticated_api_manager, valid_filter_params):
+
+    response = unauthenticated_api_manager.movies_api.get_movies(
+        params=valid_filter_params,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    movies = data["movies"]
+    movie = movies[0]
+    id = movie["id"]
+
+    return id
+
 
 # *prepares general valid filter parameters for /movies
 @pytest.fixture(scope="session")
@@ -189,7 +200,7 @@ def valid_price_filter():
 
     return params
 
-#* Creates movie data
+#* Prepares movie data 
 @pytest.fixture(scope="session")
 def create_movie(admin_api_manager):
 
@@ -197,7 +208,7 @@ def create_movie(admin_api_manager):
         "name": f"{fake.word()} в {fake.word()}",
         "imageUrl": "https://example.com/image.png",
         "price": random.randint(50, 1000),
-        "description": fake.word(),
+        "description": f"{fake.word()} вызвал сомнения у {fake.word()}",
         "location": "SPB",
         "published": True,
         "genreId": 1    

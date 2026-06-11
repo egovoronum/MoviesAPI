@@ -16,9 +16,9 @@ def test_register_user(unauthenticated_api_manager: ApiManager, test_user: dict)
     assert "USER" in data["roles"]
 
 #* login as ADMIN
-def test_admin_login(api_manager: ApiManager, admin_login: dict):
+def test_admin_login(unauthenticated_api_manager: ApiManager, admin_login: dict):
 
-    response = api_manager.auth_api.login_user(
+    response = unauthenticated_api_manager.auth_api.login_user(
         admin_login,
         expected_status=200
     )

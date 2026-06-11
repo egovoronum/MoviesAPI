@@ -88,5 +88,23 @@ def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
 
     data = response.json()
 
+    assert create_movie["name"] == data["name"], (
+        f"Names don't match!"
+    )
+
     #teardown
     create_movie["id"] = data["id"]
+
+#* test delete random movie from DB
+def test_delete_movie(admin_api_manager: ApiManager, grab_movie:int):
+
+    movie_id = grab_movie
+
+    response = admin_api_manager.movies_api.delete_movie(
+        movie_id,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert movie_id == data["id"]
