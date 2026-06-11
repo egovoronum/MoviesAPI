@@ -78,6 +78,7 @@ def test_get_movies_by_price(
             f"Price out of specified range. Look at max_price"
         )
 
+#* test get genres
 
 #* test create and teardown a movie
 def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):

@@ -42,3 +42,17 @@ class MoviesAPI(CustomRequester):
             endpoint=f"/movies/{movie_id}",
             expected_status=expected_status
         )
+    
+    def get_genre(self, genre_id:int, expected_status=200):
+        return self.send_request(
+            method="GET",
+            endpoint=f"/genres/{genre_id}",
+            expected_status=expected_status
+        )
+    
+    def get_genres(self, expected_status=200):
+        return self.send_request(
+            method="GET",
+            endpoint=f"/genres/"
+            expected_status=expected_status
+        )
