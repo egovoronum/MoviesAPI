@@ -112,3 +112,30 @@ def test_delete_movie(admin_api_manager: ApiManager, grab_movie:int):
     data = response.json()
 
     assert movie_id == data["id"]
+
+#* test patching random movie from DB
+def test_patch_random_movie(
+        admin_api_manager: ApiManager,
+        grab_movie:int, 
+        patch_movie:dict
+    ):
+
+    movie_id = grab_movie
+    patch_data = patch_movie
+
+    response = admin_api_manager.movies_api.patch_movie(
+        patch_data,
+        movie_id,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert "name" in data, f"No name field in response."
+    assert data["name"] == patch_data["name"], (
+        f"Name hasn't been patched."
+    )
+    assert "price" in data, f"No price field in response."
+    assert data["price"] == patch_data["price"], (
+        f"Price hasn't been patched."
+    )    

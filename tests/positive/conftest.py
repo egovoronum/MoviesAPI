@@ -209,7 +209,7 @@ def valid_price_filter():
     return params
 
 
-#* Prepares movie data 
+#* Prepares new movie data 
 @pytest.fixture(scope="session")
 def create_movie(admin_api_manager):
 
@@ -228,7 +228,21 @@ def create_movie(admin_api_manager):
     #teardown
     admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
 
+#* Prepares patch data for editing a movie
+@pytest.fixture(scope="session")
+def patch_movie():
 
+    data = {
+        "name": f"{fake.word()} в {fake.word()}",
+        "imageUrl": "https://example.com/image.png",
+        "price": random.randint(50, 1000),
+        "description": f"{fake.word()} вызвал сомнения у {fake.word()}",
+        "location": "SPB",
+        "published": True,
+        "genreId": 1    
+    }
+
+    return data
 
 ###########################END_OF_MOVIES################################################
 

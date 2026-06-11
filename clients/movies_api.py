@@ -34,3 +34,11 @@ class MoviesAPI(CustomRequester):
             endpoint=f"/movies/{movie_id}",
             expected_status=expected_status
         )
+    
+    def patch_movie(self, data:dict, movie_id:int, expected_status=200):
+        return self.send_request(
+            method="PATCH",
+            data=data,
+            endpoint=f"/movies/{movie_id}",
+            expected_status=expected_status
+        )
