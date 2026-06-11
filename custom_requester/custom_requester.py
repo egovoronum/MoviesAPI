@@ -5,21 +5,13 @@ import os
 from typing import Union, Iterable
 class CustomRequester:
 
-    """
-    Кастомный реквестер для стандартизации и упрощения отправки HTTP-запросов.
-    """
-
     base_headers = {
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
 
     def __init__(self, session, base_url):
-        """
-        Инициализация кастомного реквестера.
-        :param session: Объект requests.Session.
-        :param base_url: Базовый URL API.
-        """
+
         self.session = session
         self.base_url = base_url
         self.headers = self.base_headers.copy()
@@ -37,12 +29,15 @@ class CustomRequester:
         ):
         
         url = f"{self.base_url}{endpoint}"
-        response = self.session.request(method, url, json=data, params=params)
+        
+        response = self.session.request(
+            method, url, json=data, params=params
+        )
 
         if need_logging:
             self.log_request_and_response(response)
 
-        # allow list/tuple of statuses
+        # * allowed tuples and lists for statuses // requires Typing 
         if isinstance(expected_status, (list, tuple)):
             if response.status_code not in expected_status:
                 raise ValueError(
@@ -56,6 +51,7 @@ class CustomRequester:
 
         return response
 
+########################################################################################
 
     def _update_session_headers(self, headers: dict):
         self.session.headers.update(headers)
