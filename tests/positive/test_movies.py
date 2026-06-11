@@ -172,7 +172,7 @@ def test_get_random_genre(
 #* test genre deletion
 def test_delete_random_genre(
         admin_api_manager:ApiManager,
-        random_genre:int,
+        random_genre:int
     ):
 
     genre_id = random_genre
@@ -186,3 +186,21 @@ def test_delete_random_genre(
 
     assert "id" in data, f"No ID in data"
     assert "name" in data, f"No name in data"
+
+#* test genre creation
+def test_create_random_genre(
+        admin_api_manager:ApiManager,
+        genre_data:dict
+    ):
+
+    response = admin_api_manager.movies_api.create_genre(
+        genre_data,
+        expected_status=201
+    )
+
+    data = response.json()
+    
+    assert "id" in data
+    assert "name" in data
+
+    genre_data["id"] = data["id"]

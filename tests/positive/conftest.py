@@ -274,3 +274,24 @@ def random_genre(unauthenticated_api_manager):
     genre_id = genre["id"]
 
     return genre_id
+
+#* prepares random genre_data
+@pytest.fixture(scope="function")
+def genre_data(admin_api_manager):
+
+    data = {
+        "name": f"{fake.word()} усиленный {fake.word()}"
+    }
+
+    yield data
+
+    genre_id = data["id"]
+
+    try:
+        admin_api_manager.movies_api.delete_genre(
+            genre_id,
+            expected_status=200
+        )
+    except Exception as e:
+        f"Failed to delete genre with ID: {genre_id}"
+
