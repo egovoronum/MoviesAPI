@@ -140,4 +140,21 @@ def invalid_location():
 
     return params
     
+
+#! Prepares invalid movie data 
+@pytest.fixture(scope="session")
+def invalid_movie_data(admin_api_manager):
+
+    data = {
+        "name": f"{fake.word()} в {fake.word()}",
+        "imageUrl": "https://example.com/image.png",
+        "price": random.randint(-50, -1),
+        "description": f"{fake.word()} вызвал сомнения у {fake.word()}",
+        "location": "TOKYO",
+        "published": False,
+        "genreId": 1
+    }
+
+    return data 
+    
 ###############################END######################################################

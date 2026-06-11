@@ -3,7 +3,7 @@ from clients.api_manager import ApiManager
 #! minPrice > maxPrice in filter
 def test_invalid_price_filter(
         unauthenticated_api_manager:ApiManager,
-        invalid_price_filter_reversed
+        invalid_price_filter_reversed:dict
     ):
 
     params = invalid_price_filter_reversed
@@ -20,7 +20,7 @@ def test_invalid_price_filter(
 #! negative price in filter
 def test_negative_price_filter(
         unauthenticated_api_manager:ApiManager, 
-        invalid_price_filter_negative_min
+        invalid_price_filter_negative_min:dict
     ):
 
     params = invalid_price_filter_negative_min
@@ -37,7 +37,7 @@ def test_negative_price_filter(
 #! negative page value in filter
 def test_negative_page_filter(
         unauthenticated_api_manager:ApiManager,
-        invalid_page
+        invalid_page:dict
     ):
     
     params = invalid_page
@@ -56,7 +56,7 @@ def test_negative_page_filter(
 #! incorrect location value in filter
 def test_invalid_location_filter(
         unauthenticated_api_manager:ApiManager,
-        invalid_location       
+        invalid_location:dict       
     ):
 
     params = invalid_location
@@ -74,3 +74,22 @@ def test_invalid_location_filter(
     ), (
     "No 'message' field in 'response.json()'"
     )
+
+#! create invalid movie
+def test_create_invalid_movie(
+        admin_api_manager:ApiManager,
+        invalid_movie_data:dict
+    ):
+
+    movie_data = invalid_movie_data
+
+    response = admin_api_manager.movies_api.create_movie(
+        invalid_movie_data,
+        expected_status=400
+    )
+
+    data = response.json()
+
+    assert "Поле price должно быть больше 0" in data["message"]
+    assert "Поле location должно быть одним из: MSK, SPB" in data["message"]
+    assert "Bad Request" in data["error"]
