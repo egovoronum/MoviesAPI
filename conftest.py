@@ -11,7 +11,7 @@ from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
 
-# !API classes import
+# *API classes import
 
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
@@ -26,19 +26,19 @@ fake = Faker("ru_RU")
 
 ###################FIXTURES#############################################################
 
-# !session init 
+# session init 
 @pytest.fixture(scope="session")
 def session():
     http_session = requests.Session()
     yield http_session
     http_session.close()
 
-# !managing API
+# managing API
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
 
-# !managing API for unauthenticated sessions
+# managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
 
@@ -48,13 +48,13 @@ def unauthenticated_api_manager():
 
     http_session.close()
     
-# !login API
+# login API
 @pytest.fixture(scope="session")
 def api_login(session):
 
     return AuthAPI(session)
 
-# !get user by id
+# *get user by id
 @pytest.fixture(scope="session")
 def get_user():
 
@@ -62,7 +62,7 @@ def get_user():
 
     return user_id
 
-# !test user + teardown after registration
+# *test user + teardown after registration
 @pytest.fixture(scope="session")
 def test_user(session):
     
@@ -109,7 +109,7 @@ def test_user(session):
         resp = api.user_api.get_user_info(user["id"], expected_status=404)
         print("TEARDOWN: user deleted, status =", resp.status_code)
 
-# !login as admin
+# *login as admin
 @pytest.fixture(scope="session")
 def admin_login():
 
@@ -122,13 +122,82 @@ def admin_login():
 
 ############################MOVIES######################################################
 
-#!movie GET random id from range
+# *gives a random movie ID from an int range
 @pytest.fixture(scope="session")
 def movie_id():
 
     id = random.randint(570, 580)
 
     return id
+
+# *prepares general valid filter parameters for /movies
+@pytest.fixture(scope="session")
+def valid_filter_params():
+
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": 1,
+        "minPrice": random.randint(1, 200),
+        "maxPrice": random.randint(200, 1000),
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+
+# *prepares valid price filter parameters for /movies
+@pytest.fixture(scope="session")
+def valid_price_filter():
+
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": 1,
+        "minPrice": random.randint(1, 500),
+        "maxPrice": random.randint(500, 2000),
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+
+# !prepares an invalid price filter minPrice>maxPrice
+@pytest.fixture(scope="session")
+def invalid_price_filter_reversed():
+    
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": 1,
+        "minPrice": 1000,
+        "maxPrice": 100,
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+
+# !prepares an invalid price filter minPrice is negative
+@pytest.fixture(scope="session")
+def invalid_price_filter_negative_min():
+    
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": 1,
+        "minPrice": -50,
+        "maxPrice": 500,
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+
 
 ###########################END_OF_MOVIES################################################
 
