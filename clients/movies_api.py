@@ -56,3 +56,10 @@ class MoviesAPI(CustomRequester):
             endpoint=f"/genres/",
             expected_status=expected_status
         )
+    
+    def delete_genre(self, genre_id, expected_status=200):
+        return self.send_request(
+            method="DELETE",
+            endpoint=f"/genres/{genre_id}",
+            expected_status=expected_status
+        )
