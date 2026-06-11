@@ -5,14 +5,14 @@ class UserAPI(CustomRequester):
         super().__init__(session=session, base_url="https://auth.dev-cinescope.coconutqa.ru")
         self.session = session
         
-    def get_user_info(self, user_id, expected_status=200):
+    def get_user_info(self, user_id:str, expected_status=200):
         return self.send_request(
             method="GET",
             endpoint=f"/user/{user_id}",
             expected_status=expected_status
         )
         
-    def delete_user(self, user_id, expected_status=200):
+    def delete_user(self, user_id:str, expected_status=200):
         return self.send_request(
             method="DELETE",
             endpoint=f"/user/{user_id}",

@@ -1,7 +1,7 @@
-from constants import REGISTER_ENDPOINT, LOGIN_ENDPOINT, AUTH_URL
-from custom_requester.custom_requester import CustomRequester
+import constants
+import custom_requester.custom_requester
 
-class AuthAPI(CustomRequester):
+class AuthAPI(custom_requester.custom_requester.CustomRequester):
     
     def __init__(self, session):
         super().__init__(
@@ -12,7 +12,7 @@ class AuthAPI(CustomRequester):
     def register_user(self, user_data, expected_status=201):
         return self.send_request(
             method="POST",
-            endpoint=REGISTER_ENDPOINT,
+            endpoint=constants.REGISTER_ENDPOINT,
             data=user_data,
             expected_status=expected_status
         )
@@ -20,7 +20,7 @@ class AuthAPI(CustomRequester):
     def login_user(self, login_data, expected_status=200):
         return self.send_request(
             method="POST",
-            endpoint=LOGIN_ENDPOINT,
+            endpoint=constants.LOGIN_ENDPOINT,
             data=login_data,
             expected_status=expected_status
         )
@@ -40,3 +40,4 @@ class AuthAPI(CustomRequester):
         token = response["accessToken"]
         
         self._update_session_headers({"authorization": "Bearer " + token})
+        

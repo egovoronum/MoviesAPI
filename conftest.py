@@ -1,3 +1,5 @@
+##############################SETUP#####################################################
+
 import requests, pytest, random
 from constants import (
     BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
@@ -21,6 +23,8 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
+
+###################FIXTURES#############################################################
 
 # !session init 
 @pytest.fixture(scope="session")
@@ -116,10 +120,17 @@ def admin_login():
 
     return login_data
 
+############################MOVIES######################################################
 
+#!movie GET random id from range
+@pytest.fixture(scope="session")
+def movie_id():
 
+    id = random.randint(570, 580)
 
+    return id
 
+###########################END_OF_MOVIES################################################
 
 
 
