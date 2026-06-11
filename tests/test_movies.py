@@ -10,6 +10,12 @@ def test_register_user(api_manager, test_user):
     assert "id" in data
     assert "USER" in data["roles"]
 
+def test_admin_login(api_manager, admin_login):
+
+    response = api_manager.auth_api.login_user(admin_login)
+    data = response.json()
+
+
 class TestMoviesAPI:
 
 # GET MOVIES // testing first movie in the list
