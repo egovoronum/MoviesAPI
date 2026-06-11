@@ -164,41 +164,6 @@ def valid_price_filter():
 
     return params
 
-# !prepares an invalid price filter minPrice>maxPrice
-@pytest.fixture(scope="session")
-def invalid_price_filter_reversed():
-    
-    params = {
-        "pageSize": random.randint(1, 10),
-        "page": 1,
-        "minPrice": 1000,
-        "maxPrice": 100,
-        "locations": ["MSK", "SPB"],
-        "published": True,
-        "genreId": 1,
-        "createdAt": "asc"
-    }
-
-    return params
-
-# !prepares an invalid price filter minPrice is negative
-@pytest.fixture(scope="session")
-def invalid_price_filter_negative_min():
-    
-    params = {
-        "pageSize": random.randint(1, 10),
-        "page": 1,
-        "minPrice": -50,
-        "maxPrice": 500,
-        "locations": ["MSK", "SPB"],
-        "published": True,
-        "genreId": 1,
-        "createdAt": "asc"
-    }
-
-    return params
-
-
 ###########################END_OF_MOVIES################################################
 
 
