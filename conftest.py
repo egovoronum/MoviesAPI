@@ -43,6 +43,18 @@ def api_login(session):
 @pytest.fixture(scope="session")
 def test_user(session):
     
+    api = ApiManager(session)
+
+    admin_login = {
+        "email": ADMIN_EMAIL,
+        "password": ADMIN_PASSWORD
+    }
+
+    user = {
+        "register_data": None,
+        "id": None
+    }
+    
     password = fake.password(
         length=12,
         special_chars=False,
@@ -58,8 +70,22 @@ def test_user(session):
         "passwordRepeat": password
     }
     
-    return register_data
+    user["register_data"] = register_data
+
+    yield user
+
+    if user["id"] is not None:
+
+        resp = api.auth_api.login_user(admin_login)
+        token = resp.json()["accessToken"]
+
+        session.headers.update({"Authorization": f"Bearer {token}"})
+
+        api.user_api.delete_user(user["id"])
     
+        resp = api.user_api.get_user_info(user["id"], expected_status=404)
+        print("TEARDOWN: user deleted, status =", resp.status_code)
+
 # login as admin
 @pytest.fixture(scope="session")
 def admin_login():
