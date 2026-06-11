@@ -19,3 +19,18 @@ class MoviesAPI(CustomRequester):
             params=params,
             expected_status=expected_status
         )
+    
+    def create_movie(self, movie_data:dict, expected_status=200):
+        return self.send_request(
+            method="POST",
+            endpoint=f"/movies/",
+            data=movie_data,
+            expected_status=expected_status
+        )
+    
+    def delete_movie(self, movie_id:int, expected_status=200):
+        return self.send_request(
+            method="DELETE",
+            endpoint=f"/movies/{movie_id}",
+            expected_status=expected_status
+        )

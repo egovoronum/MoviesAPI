@@ -16,6 +16,7 @@ import os
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
 from clients.user_api import UserAPI
+from clients.movies_api import MoviesAPI
 
 load_dotenv()
 
@@ -31,6 +32,18 @@ fake = Faker("ru_RU")
 def session():
     http_session = requests.Session()
     yield http_session
+    http_session.close()
+
+# Admin API manager
+@pytest.fixture(scope="session")
+def admin_api_manager():
+    
+    http_session = requests.Session()
+    admin_api_manager = ApiManager(http_session)
+    admin_api_manager.auth_api.authenticate([ADMIN_EMAIL, ADMIN_PASSWORD])
+    
+    yield admin_api_manager
+    
     http_session.close()
 
 # managing API
@@ -53,6 +66,7 @@ def unauthenticated_api_manager():
 def api_login(session):
 
     return AuthAPI(session)
+
 
 #########################FIXTURES#######################################################
 
@@ -112,7 +126,7 @@ def test_user(session):
 
         api.user_api.delete_user(user["id"], expected_status=200)
 
-# *login as admin
+#* admin login data
 @pytest.fixture(scope="session")
 def admin_login():
 
@@ -122,6 +136,14 @@ def admin_login():
     }
 
     return login_data
+
+#* authenticate as admin
+@pytest.fixture(scope="session")
+def admin_auth(api_manager, admin_login):
+    
+    api_manager.auth_api.authenticate([admin_login["email"], admin_login["password"]])
+    
+    return api_manager
 
 ############################MOVIES######################################################
 
@@ -166,6 +188,27 @@ def valid_price_filter():
     }
 
     return params
+
+#* Creates movie data
+@pytest.fixture(scope="session")
+def create_movie(admin_api_manager):
+
+    data = {
+        "name": f"{fake.word()} в {fake.word()}",
+        "imageUrl": "https://example.com/image.png",
+        "price": random.randint(50, 1000),
+        "description": fake.word(),
+        "location": "SPB",
+        "published": True,
+        "genreId": 1    
+    }
+
+    yield data
+
+    #teardown
+    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+
+
 
 ###########################END_OF_MOVIES################################################
 
