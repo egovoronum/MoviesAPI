@@ -11,6 +11,7 @@ from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
 
+
 # *API classes import
 
 from clients.api_manager import ApiManager
@@ -34,6 +35,7 @@ def session():
     yield http_session
     http_session.close()
 
+
 # Admin API manager
 @pytest.fixture(scope="session")
 def admin_api_manager():
@@ -51,6 +53,7 @@ def admin_api_manager():
 def api_manager(session):
     return ApiManager(session)
 
+
 # managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
@@ -61,6 +64,7 @@ def unauthenticated_api_manager():
 
     http_session.close()
     
+
 # login API
 @pytest.fixture(scope="session")
 def api_login(session):
@@ -69,6 +73,7 @@ def api_login(session):
 
 
 #########################FIXTURES#######################################################
+
 
 #* admin login data
 @pytest.fixture(scope="session")
@@ -81,6 +86,7 @@ def admin_login():
 
     return login_data
 
+
 # *get user by id
 @pytest.fixture(scope="session")
 def get_user():
@@ -88,6 +94,7 @@ def get_user():
     user_id = "734964ec-4d6a-4789-839f-75797141e73e"
 
     return user_id
+
 
 # *test user + teardown after registration
 @pytest.fixture(scope="session")
@@ -183,6 +190,7 @@ def valid_filter_params():
 
     return params
 
+
 # *prepares valid price filter parameters for /movies
 @pytest.fixture(scope="session")
 def valid_price_filter():
@@ -199,6 +207,7 @@ def valid_price_filter():
     }
 
     return params
+
 
 #* Prepares movie data 
 @pytest.fixture(scope="session")

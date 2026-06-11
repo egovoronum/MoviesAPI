@@ -15,6 +15,7 @@ def test_register_user(unauthenticated_api_manager: ApiManager, test_user: dict)
     assert "id" in data
     assert "USER" in data["roles"]
 
+
 #* login as ADMIN
 def test_admin_login(unauthenticated_api_manager: ApiManager, admin_login: dict):
 
@@ -24,6 +25,7 @@ def test_admin_login(unauthenticated_api_manager: ApiManager, admin_login: dict)
     )
 
     data = response.json()
+
 
 #* Test get user info as an unauthenticated user
 def test_get_user_info(unauthenticated_api_manager: ApiManager, get_user: str):

@@ -17,6 +17,7 @@ def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
         assert "Фильм не найден" in data["message"]
         assert "Not Found" in data["error"]
 
+
 #* test if fields are correct in /MOVIES list
 def test_get_movies(
         unauthenticated_api_manager:ApiManager,
@@ -50,6 +51,7 @@ def test_get_movies(
     assert "genre" in movies[0], "No genre object in movies[0]"
     assert "name" in movies[0]["genre"], "No genre.name in movies[0]"
 
+
 #* test if price filter works
 def test_get_movies_by_price(
         unauthenticated_api_manager:ApiManager,
@@ -76,6 +78,7 @@ def test_get_movies_by_price(
             f"Price out of specified range. Look at max_price"
         )
 
+
 #* test create and teardown of a movie
 def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
     
@@ -94,6 +97,7 @@ def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
 
     #teardown
     create_movie["id"] = data["id"]
+
 
 #* test delete random movie from DB
 def test_delete_movie(admin_api_manager: ApiManager, grab_movie:int):
