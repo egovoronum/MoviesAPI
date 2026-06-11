@@ -33,10 +33,24 @@ def session():
     yield http_session
     http_session.close()
 
-# managing API
+
+# Admin API manager
+@pytest.fixture(scope="session")
+def admin_api_manager():
+    
+    http_session = requests.Session()
+    admin_api_manager = ApiManager(http_session)
+    admin_api_manager.auth_api.authenticate([ADMIN_EMAIL, ADMIN_PASSWORD])
+    
+    yield admin_api_manager
+    
+    http_session.close()
+
+#? нигде не юзаю... managing API 
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
+
 
 # managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
@@ -47,6 +61,14 @@ def unauthenticated_api_manager():
     yield ApiManager(http_session)
 
     http_session.close()
+    
+
+# login API
+@pytest.fixture(scope="session")
+def api_login(session):
+
+    return AuthAPI(session)
+
     
 #############################FIXTURES###################################################
 

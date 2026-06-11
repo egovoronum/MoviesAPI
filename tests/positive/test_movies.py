@@ -79,7 +79,7 @@ def test_get_movies_by_price(
         )
 
 
-#* test create and teardown of a movie
+#* test create and teardown a movie
 def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
     
     movie_data = create_movie
