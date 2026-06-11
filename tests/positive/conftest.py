@@ -156,7 +156,7 @@ def movie_id():
 
 
 # *finds an existing movie and grabs ID
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
     response = unauthenticated_api_manager.movies_api.get_movies(
@@ -167,6 +167,10 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
     data = response.json()
 
     movies = data["movies"]
+
+    if len(movies) < 1:
+        raise RuntimeError("Couldn't grab as movie list length is less than 1!")
+    
     movie = movies[0]
     id = movie["id"]
 
@@ -181,7 +185,7 @@ def valid_filter_params():
         "pageSize": random.randint(1, 10),
         "page": 1,
         "minPrice": random.randint(1, 200),
-        "maxPrice": random.randint(200, 1000),
+        "maxPrice": random.randint(200, 1500),
         "locations": ["MSK", "SPB"],
         "published": True,
         "genreId": 1,
@@ -244,7 +248,29 @@ def patch_movie():
 
     return data
 
-###########################END_OF_MOVIES################################################
+###########################GENRES################################################
 
+#* gets a list of random genres
+@pytest.fixture(scope="session")
+def get_genres(unauthenticated_api_manager):
+    
+    response = unauthenticated_api_manager.movies_api.get_genres(
+        expected_status=200
+    )
+    data = response.json()
 
+    return data
 
+#* prepares an existing random genre ID 
+@pytest.fixture(scope="function")
+def random_genre(unauthenticated_api_manager):
+    
+    response = unauthenticated_api_manager.movies_api.get_genres(
+        expected_status=200
+    )
+
+    genres = response.json()
+    genre = random.choice(genres)
+    genre_id = genre["id"]
+
+    return genre_id

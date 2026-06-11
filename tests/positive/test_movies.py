@@ -78,8 +78,6 @@ def test_get_movies_by_price(
             f"Price out of specified range. Look at max_price"
         )
 
-#* test get genres
-
 #* test create and teardown a movie
 def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
     
@@ -140,3 +138,34 @@ def test_patch_random_movie(
     assert data["price"] == patch_data["price"], (
         f"Price hasn't been patched."
     )    
+
+#* test if genres list has necessary fields
+def test_get_genres(
+        unauthenticated_api_manager: ApiManager,
+        get_genres:dict
+    ):
+
+    genres = get_genres
+
+    for genre in genres:
+        assert "id" in genre
+        assert "name" in genre
+
+#* test get random genre
+def test_get_random_genre(
+        unauthenticated_api_manager: ApiManager,
+        random_genre:int,
+        expected_status=200
+    ):
+
+    genre_id = random_genre
+
+    response = unauthenticated_api_manager.movies_api.get_genre(
+        genre_id,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert "id" in data, f"No ID in data"
+    assert "name" in data, f"No name in data"
