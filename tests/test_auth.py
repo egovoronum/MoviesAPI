@@ -1,85 +1,28 @@
-import requests
-from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT, LOGOUT_ENDPOINT  
-import pytest
-from constants import REGISTER_ENDPOINT, LOGIN_ENDPOINT
+# register and delete a user
+from clients.api_manager import ApiManager
 
+# Test registration and teardown
+def test_register_user(api_manager: ApiManager, test_user: dict):
+    
+    register_data = test_user["register_data"]
 
-# class TestAuthAPI:
-    # def test_register_user(self, requester, test_user):
-    #     """
-    #     Тест на регистрацию пользователя.
-    #     """
-    #     response = requester.send_request(
-    #         method="POST",
-    #         endpoint=REGISTER_ENDPOINT,
-    #         data=test_user,
-    #         expected_status=201
-    #     )
-    #     response_data = response.json()
-    #     assert response_data["email"] == test_user["email"], "Email не совпадает"
-    #     assert "id" in response_data, "ID пользователя отсутствует в ответе"
-    #     assert "roles" in response_data, "Роли пользователя отсутствуют в ответе"
-    #     assert "USER" in response_data["roles"], "Роль USER должна быть у пользователя"
+    response = api_manager.auth_api.register_user(register_data)
+    data = response.json()
+    
+    test_user["id"] = data["id"]
 
-    # def test_register_and_login_user(self, requester, registered_user):
-    #     """
-    #     Тест на регистрацию и авторизацию пользователя.
-    #     """
-    #     login_data = {
-    #         "email": registered_user["email"],
-    #         "password": registered_user["password"]
-    #     }
-    #     response = requester.send_request(
-    #         method="POST",
-    #         endpoint=LOGIN_ENDPOINT,
-    #         data=login_data,
-    #         expected_status=201
-    #     )
-    #     response_data = response.json()
-    #     assert "accessToken" in response_data, "Токен доступа отсутствует в ответе"
-    #     assert response_data["user"]["email"] == registered_user["email"], "Email не совпадает"
+    assert data["email"] == register_data["email"]
+    assert "id" in data
+    assert "USER" in data["roles"]
 
+# login as ADMIN
+def test_admin_login(api_manager: ApiManager, admin_login: dict):
 
+    response = api_manager.auth_api.login_user(admin_login)
+    data = response.json()
 
-    # def test_register_temp_user(self, test_user): # testing registration with a temp user
-    #     register_url = f"{BASE_URL}{REGISTER_ENDPOINT}"
-    #     response = requests.post(register_url, json=test_user, headers=HEADERS)
-    #     response_data = response.json()
-    #     assert response.status_code == 201, "Ошибка регистрации пользователя"
-    #     assert response_data["email"] == test_user["email"], "Email не совпадает"
-    #     assert "id" in response_data, "ID пользователя отсутствует в ответе"
-    #     assert "roles" in response_data, "Роли пользователя отсутствуют в ответе"
-    #     assert "USER" in response_data["roles"], "Роль USER должна быть у пользователя"        
+# Test get user info as an unauthenticated user
+def test_get_user_info(unauthenticated_api_manager: ApiManager, get_user: str):
 
-    # def test_login_temp_user(self, test_user_login_data):
-    #     response = requests.post(f"{BASE_URL}{LOGIN_ENDPOINT}", json=test_user_login_data, headers=HEADERS)
-    #     assert response.status_code == 200, "Expected 200: Error at test_login_temp_user"
-
-    # def test_register_session_user(self, session_user): # ! TESTING REGISTRATION
-    #     register_url = f"{BASE_URL}{REGISTER_ENDPOINT}"
-    #     response = requests.post(register_url, json=session_user, headers=HEADERS)
-    #     response_data = response.json()
-    #     assert response.status_code == 201, "Ошибка регистрации пользователя"
-    #     assert response_data["email"] == session_user["email"], "Email не совпадает"
-    #     assert "id" in response_data, "ID пользователя отсутствует в ответе"
-    #     assert "roles" in response_data, "Роли пользователя отсутствуют в ответе"
-    #     assert "USER" in response_data["roles"], "Роль ADMIN должна быть у session пользователя"
-
-    # def test_login_session_user(self, session_user): # ! TESTING LOGIN + TEARDOWN
-    #     login_url = f"{BASE_URL}{LOGIN_ENDPOINT}"
-    #     login_data = {
-    #     "email": session_user["email"],
-    #     "password": session_user["password"]
-    #     }
-    #     response = requests.post(login_url, json=login_data, headers=HEADERS)
-    #     assert response.status_code == 200, "Auth error"
-
-    # def test_patch_user(get_user_id):
-    #     url = f"{BASE_URL}/user/{get_user_id}"
-    #     response = requests.patch(url)
-    #     assert response.status_code == 200, "Expected 200"
-
-    # def test_logout(self, auth_session): # ! TESTING LOGOUT
-    #     logout_url = f"{BASE_URL}{LOGOUT_ENDPOINT}"
-    #     response = auth_session.get(logout_url)
-    #     assert response.status_code == 200, f"Expected 200 but got: {response.status_code}"
+    response = unauthenticated_api_manager.user_api.get_user_info(get_user, expected_status=401)
+    data = response.json()

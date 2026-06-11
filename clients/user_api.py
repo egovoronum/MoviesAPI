@@ -8,7 +8,7 @@ class UserAPI(CustomRequester):
     def get_user_info(self, user_id, expected_status=200):
         return self.send_request(
             method="GET",
-            endpoint=f"/users/{user_id}",
+            endpoint=f"/user/{user_id}",
             expected_status=expected_status
         )
         

@@ -12,3 +12,4 @@ __pycache__/
 .env
 test_movies_legacy.py
 conftest_legacy.py
+test_auth_legacy.py

@@ -37,16 +37,28 @@ def api_manager(session):
 # !managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
+
     http_session = requests.Session()
-    yield ApiManager(session)
+
+    yield ApiManager(http_session)
+
     http_session.close()
     
 # !login API
 @pytest.fixture(scope="session")
 def api_login(session):
+
     return AuthAPI(session)
-    
-# !test user + teardown
+
+# !get user by id
+@pytest.fixture(scope="session")
+def get_user():
+
+    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
+
+    return user_id
+
+# !test user + teardown after registration
 @pytest.fixture(scope="session")
 def test_user(session):
     
