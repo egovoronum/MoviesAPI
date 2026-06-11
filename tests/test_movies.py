@@ -3,7 +3,9 @@ from clients.api_manager import ApiManager
 #* Get a random movie & check ID mismatch
 def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
 
-    response = unauthenticated_api_manager.movies_api.get_movie(movie_id)
+    response = unauthenticated_api_manager.movies_api.get_movie(
+        movie_id, expected_status=200
+    )
     data = response.json()
 
     assert data["id"] == movie_id
@@ -14,7 +16,9 @@ def test_get_movies(unauthenticated_api_manager:ApiManager, valid_filter_params:
     params = valid_filter_params
     page_size = params["pageSize"]
     
-    response = unauthenticated_api_manager.movies_api.get_movies(valid_filter_params)
+    response = unauthenticated_api_manager.movies_api.get_movies(
+        valid_filter_params, expected_status=200
+    )
     
     data = response.json()
     movies = data["movies"]
@@ -42,7 +46,9 @@ def test_get_movies_by_price(unauthenticated_api_manager:ApiManager, valid_price
     min_price = params["minPrice"]
     max_price = params["maxPrice"]
 
-    response = unauthenticated_api_manager.movies_api.get_movies(params)
+    response = unauthenticated_api_manager.movies_api.get_movies(
+        params, expected_status=200
+    )
     
     data = response.json()
     movies = data["movies"]
