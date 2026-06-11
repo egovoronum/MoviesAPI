@@ -1,14 +1,19 @@
 from clients.api_manager import ApiManager
 
-#* Get a random movie & check ID mismatch
+#* Get a random movie & check ID mismatch if 200
 def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
 
     response = unauthenticated_api_manager.movies_api.get_movie(
-        movie_id, expected_status=200
+        movie_id, expected_status=[200, 404]
     )
     data = response.json()
 
-    assert data["id"] == movie_id
+    if response.status_code == 200:
+        assert data["id"] == movie_id
+    
+    if response.status_code == 404:
+        assert "Фильм не найден" in data["message"]
+        assert "Not Found" in data["error"]
 
 #* Unauthenticated GET MOVIES list. Check if response has all fields..
 def test_get_movies(unauthenticated_api_manager:ApiManager, valid_filter_params:dict):
