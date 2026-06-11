@@ -1,11 +1,11 @@
 from clients.api_manager import ApiManager
 
 #* Test registration and teardown
-def test_register_user(api_manager: ApiManager, test_user: dict):
+def test_register_user(unauthenticated_api_manager: ApiManager, test_user: dict):
     
     register_data = test_user["register_data"]
 
-    response = api_manager.auth_api.register_user(register_data)
+    response = unauthenticated_api_manager.auth_api.register_user(register_data)
     
     data = response.json()
     
@@ -18,7 +18,11 @@ def test_register_user(api_manager: ApiManager, test_user: dict):
 #* login as ADMIN
 def test_admin_login(api_manager: ApiManager, admin_login: dict):
 
-    response = api_manager.auth_api.login_user(admin_login)
+    response = api_manager.auth_api.login_user(
+        admin_login,
+        expected_status=200
+    )
+
     data = response.json()
 
 #* Test get user info as an unauthenticated user

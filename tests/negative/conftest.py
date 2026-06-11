@@ -24,7 +24,31 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 
-###################FIXTURES#############################################################
+################################SETUP2###################################################
+
+# session init 
+@pytest.fixture(scope="session")
+def session():
+    http_session = requests.Session()
+    yield http_session
+    http_session.close()
+
+# managing API
+@pytest.fixture(scope="session")
+def api_manager(session):
+    return ApiManager(session)
+
+# managing API for unauthenticated sessions
+@pytest.fixture(scope="session")
+def unauthenticated_api_manager():
+
+    http_session = requests.Session()
+
+    yield ApiManager(http_session)
+
+    http_session.close()
+    
+#############################FIXTURES###################################################
 
 # !prepares an invalid price filter minPrice>maxPrice
 @pytest.fixture(scope="session")
@@ -60,4 +84,38 @@ def invalid_price_filter_negative_min():
 
     return params
 
+#! prepares an invalid page value in filter
+@pytest.fixture(scope="session")
+def invalid_page():
+
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": -1,
+        "minPrice": 100,
+        "maxPrice": 1000,
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+
+#! prepares an invalid location field in filter
+@pytest.fixture(scope="session")
+def invalid_location():
+
+    params = {
+        "pageSize": random.randint(1, 10),
+        "page": 1,
+        "minPrice": 100,
+        "maxPrice": 1000,
+        "locations": ["TOKYO", 32],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+    
 ###############################END######################################################

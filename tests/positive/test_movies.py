@@ -1,10 +1,11 @@
 from clients.api_manager import ApiManager
 
-#* Get a random movie & check ID mismatch if 200
+#* GET RANDOM MOVIE // ACCEPTS 200 & 404
 def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
 
     response = unauthenticated_api_manager.movies_api.get_movie(
-        movie_id, expected_status=[200, 404]
+        movie_id, 
+        expected_status=[200, 404]
     )
     data = response.json()
 
@@ -15,14 +16,15 @@ def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
         assert "Фильм не найден" in data["message"]
         assert "Not Found" in data["error"]
 
-#* Unauthenticated GET MOVIES list. Check if response has all fields..
+#* GET MOVIES LIST
 def test_get_movies(unauthenticated_api_manager:ApiManager, valid_filter_params:dict):
     
     params = valid_filter_params
     page_size = params["pageSize"]
     
     response = unauthenticated_api_manager.movies_api.get_movies(
-        valid_filter_params, expected_status=200
+        valid_filter_params, 
+        expected_status=200
     )
     
     data = response.json()
@@ -44,7 +46,7 @@ def test_get_movies(unauthenticated_api_manager:ApiManager, valid_filter_params:
     assert "genre" in movies[0], "No genre object in movies[0]"
     assert "name" in movies[0]["genre"], "No genre.name in movies[0]"
 
-#* Unauthenticated GET MOVIES list. Test if price filter works.
+#* PRICE FILTER 
 def test_get_movies_by_price(unauthenticated_api_manager:ApiManager, valid_price_filter):
 
     params = valid_price_filter
@@ -52,7 +54,8 @@ def test_get_movies_by_price(unauthenticated_api_manager:ApiManager, valid_price
     max_price = params["maxPrice"]
 
     response = unauthenticated_api_manager.movies_api.get_movies(
-        params, expected_status=200
+        params, 
+        expected_status=200
     )
     
     data = response.json()

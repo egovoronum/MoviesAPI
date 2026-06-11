@@ -1,3 +1,4 @@
+from typing import Union, Iterable
 from custom_requester.custom_requester import CustomRequester
 
 class UserAPI(CustomRequester):
@@ -12,7 +13,7 @@ class UserAPI(CustomRequester):
             expected_status=expected_status
         )
         
-    def delete_user(self, user_id:str, expected_status=200):
+    def delete_user(self, user_id:str, expected_status:Union[int, Iterable[int]] = 200):
         return self.send_request(
             method="DELETE",
             endpoint=f"/user/{user_id}",

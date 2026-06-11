@@ -24,7 +24,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 
-###################FIXTURES#############################################################
+#####################SETUP2#############################################################
 
 # session init 
 @pytest.fixture(scope="session")
@@ -53,6 +53,8 @@ def unauthenticated_api_manager():
 def api_login(session):
 
     return AuthAPI(session)
+
+#########################FIXTURES#######################################################
 
 # *get user by id
 @pytest.fixture(scope="session")
@@ -87,7 +89,7 @@ def test_user(session):
     )
 
     register_data = {
-        "email": fake.email(),
+        "email": DataGenerator.generate_random_email(),
         "fullName": fake.name(),
         "password": password,
         "passwordRepeat": password
@@ -99,15 +101,16 @@ def test_user(session):
 
     if user["id"] is not None:
 
-        resp = api.auth_api.login_user(admin_login)
-        token = resp.json()["accessToken"]
-
+        response = api.auth_api.login_user(
+            admin_login,
+            expected_status=200
+        )
+        
+        token = response.json()["accessToken"]
+        
         session.headers.update({"Authorization": f"Bearer {token}"})
 
-        api.user_api.delete_user(user["id"])
-    
-        resp = api.user_api.get_user_info(user["id"], expected_status=404)
-        print("TEARDOWN: user deleted, status =", resp.status_code)
+        api.user_api.delete_user(user["id"], expected_status=200)
 
 # *login as admin
 @pytest.fixture(scope="session")
