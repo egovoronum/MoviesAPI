@@ -146,11 +146,11 @@ def test_user(session):
 
 ############################MOVIES######################################################
 
-# *gives a random movie ID from an int range
+# *gives unexisting movie ID from an int range
 @pytest.fixture(scope="session")
 def movie_id():
 
-    id = random.randint(570, 580)
+    id = random.randint(500000, 600000)
 
     return id
 
@@ -221,7 +221,7 @@ def create_movie(admin_api_manager):
         "name": f"{fake.word()} в {fake.word()}",
         "imageUrl": "https://example.com/image.png",
         "price": random.randint(50, 1000),
-        "description": f"{fake.word()} вызвал сомнения у {fake.word()}",
+        "description": f"{fake.text(2)}, ведь не все так однозначно с {fake.text(2)}",
         "location": "SPB",
         "published": True,
         "genreId": 1    
@@ -240,7 +240,7 @@ def patch_movie():
         "name": f"{fake.word()} в {fake.word()}",
         "imageUrl": "https://example.com/image.png",
         "price": random.randint(50, 1000),
-        "description": f"{fake.word()} вызвал сомнения у {fake.word()}",
+        "description": f"{fake.text(2)} вызвал сомнения у {fake.text(2)}",
         "location": "SPB",
         "published": True,
         "genreId": 1    
@@ -293,5 +293,5 @@ def genre_data(admin_api_manager):
             expected_status=200
         )
     except Exception as e:
-        f"Failed to delete genre with ID: {genre_id}"
+        f"Failed to delete genre with ID at teardown: {genre_id}"
 

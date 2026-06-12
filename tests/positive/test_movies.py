@@ -1,24 +1,45 @@
 from clients.api_manager import ApiManager
 
-#* test GET random movie ID // ACCEPTS 200 & 404
-def test_get_movie(unauthenticated_api_manager:ApiManager, movie_id:int):
+#* test GET movie / expect 404
+def test_get_404movie(unauthenticated_api_manager:ApiManager, movie_id:int):
 
     response = unauthenticated_api_manager.movies_api.get_movie(
         movie_id, 
-        expected_status=[200, 404]
+        expected_status=404
     )
 
     data = response.json()
 
-    if response.status_code == 200:
-        assert data["id"] == movie_id
-    
-    if response.status_code == 404:
-        assert "Фильм не найден" in data["message"]
-        assert "Not Found" in data["error"]
+    assert "Фильм не найден" in data["message"]
+    assert "Not Found" in data["error"]
 
+#* test GET movie validity / expect 200
+def test_get_200movie(
+        unauthenticated_api_manager:ApiManager,
+        grab_movie:int
+    ):
 
-#* test if fields are correct in /MOVIES list
+    response = unauthenticated_api_manager.movies_api.get_movie(
+        grab_movie,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert "id" in data
+    assert "name" in data
+    assert "price" in data
+    assert "description" in data
+    assert "imageUrl" in data
+    assert "location" in data
+    assert "published" in data
+    assert "rating" in data
+    assert "genreId" in data
+    assert "createdAt" in data
+    assert "reviews" in data
+    assert "genre" in data
+
+#* test GET movieS list validity / expect 200
 def test_get_movies(
         unauthenticated_api_manager:ApiManager,
         valid_filter_params:dict
@@ -78,8 +99,12 @@ def test_get_movies_by_price(
             f"Price out of specified range. Look at max_price"
         )
 
+
 #* test create and teardown a movie
-def test_create_movie(admin_api_manager: ApiManager, create_movie:dict):
+def test_create_movie(
+        admin_api_manager: ApiManager,
+        create_movie:dict
+    ):
     
     movie_data = create_movie
 
@@ -112,6 +137,7 @@ def test_delete_movie(admin_api_manager: ApiManager, grab_movie:int):
 
     assert movie_id == data["id"]
 
+
 #* test patching random movie from DB
 def test_patch_random_movie(
         admin_api_manager: ApiManager,
@@ -139,9 +165,9 @@ def test_patch_random_movie(
         f"Price hasn't been patched."
     )    
 
+
 #* test if genres list has necessary fields
 def test_get_genres(
-        unauthenticated_api_manager: ApiManager,
         get_genres:dict
     ):
 
@@ -150,6 +176,7 @@ def test_get_genres(
     for genre in genres:
         assert "id" in genre
         assert "name" in genre
+
 
 #* test get random genre
 def test_get_random_genre(
@@ -169,23 +196,6 @@ def test_get_random_genre(
     assert "id" in data, f"No ID in data"
     assert "name" in data, f"No name in data"
 
-#* test genre deletion
-def test_delete_random_genre(
-        admin_api_manager:ApiManager,
-        random_genre:int
-    ):
-
-    genre_id = random_genre
-
-    response = admin_api_manager.movies_api.delete_genre(
-        genre_id,
-        expected_status=200
-    )
-
-    data = response.json()
-
-    assert "id" in data, f"No ID in data"
-    assert "name" in data, f"No name in data"
 
 #* test genre creation
 def test_create_random_genre(
@@ -204,3 +214,23 @@ def test_create_random_genre(
     assert "name" in data
 
     genre_data["id"] = data["id"]
+
+
+#* test genre deletion
+def test_delete_random_genre(
+        admin_api_manager:ApiManager,
+        random_genre:int
+    ):
+
+    genre_id = random_genre
+
+    response = admin_api_manager.movies_api.delete_genre(
+        genre_id,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert "id" in data, f"No ID in data"
+    assert "name" in data, f"No name in data"
+
