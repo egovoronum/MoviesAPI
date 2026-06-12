@@ -4,11 +4,11 @@ from utils.time_util import iso_now
 #* test GET movie / expect 404
 def test_get_404movie(
         unauthenticated_api_manager: ApiManager,
-        movie_id: int
+        invalid_movie_id: int
     ):
 
     response = unauthenticated_api_manager.movies_api.get_movie(
-        movie_id, 
+        invalid_movie_id, 
         expected_status=404
     )
 
@@ -153,25 +153,20 @@ def test_get_movies_desc(
         previous = current
         
 
-#* test create and teardown a movie
-def test_create_movie(
-        admin_api_manager: ApiManager,
-        create_movie: dict
-    ):
-    
-    response = admin_api_manager.movies_api.create_movie(
-        create_movie,
-        expected_status=201
-    )
+#* validate new movie data
+def test_create_movie(create_test_movie):
 
-    data = response.json()
-
-    assert create_movie["name"] == data["name"], (
-        f"Names don't match!"
-    )
-
-    #teardown
-    create_movie["id"] = data["id"]
+    assert "id" in create_test_movie
+    assert "name" in create_test_movie
+    assert "price" in create_test_movie
+    assert "description" in create_test_movie
+    assert "imageUrl" in create_test_movie
+    assert "location" in create_test_movie
+    assert "published" in create_test_movie
+    assert "rating" in create_test_movie
+    assert "genreId" in create_test_movie
+    assert "createdAt" in create_test_movie
+    assert "genre" in create_test_movie
 
 
 #* test delete random movie from DB
@@ -306,3 +301,53 @@ def test_movie_review(
         assert "hidden" in review
         assert "user" in review
         assert "fullName" in review["user"]
+
+#* test POST a movie review as ADMIN
+def test_post_movie_review(
+        admin_api_manager: ApiManager,
+        movie_id: int,
+        generate_review: dict
+    ):
+
+    response = admin_api_manager.movies_api.post_review(
+        movie_id=movie_id,
+        data = generate_review,
+        expected_status=201
+    )
+
+    data = response.json()
+
+    assert "userId" in data
+    assert generate_review["text"] == data["text"]
+    assert generate_review["rating"] == data["rating"]
+    assert "hidden" in data
+    assert "createdAt" in data
+    assert "user" in data
+
+    generate_review["movieId"] = movie_id
+    generate_review["userId"] = data["userId"]
+
+#* test POST a movie review as USER
+def test_user_movie_review(
+        user_api_manager: ApiManager,
+        movie_id: int,
+        generate_review: dict
+    ):
+
+    response = user_api_manager.movies_api.post_review(
+        movie_id=movie_id,
+        data = generate_review,
+        expected_status=201
+    )
+
+    data = response.json()
+
+    assert "userId" in data
+    assert generate_review["text"] == data["text"]
+    assert generate_review["rating"] == data["rating"]
+    assert "hidden" in data
+    assert "createdAt" in data
+    assert "user" in data
+
+    generate_review["movieId"] = movie_id
+    generate_review["userId"] = data["userId"]

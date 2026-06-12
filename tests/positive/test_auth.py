@@ -5,16 +5,14 @@ def test_register_user(
         unauthenticated_api_manager: ApiManager,
         test_user: dict
     ):
-    
-    register_data = test_user["register_data"]
 
-    response = unauthenticated_api_manager.auth_api.register_user(register_data)
+    response = unauthenticated_api_manager.auth_api.register_user(test_user)
     
     data = response.json()
-    
+
     test_user["id"] = data["id"]
 
-    assert data["email"] == register_data["email"]
+    assert data["email"] == test_user["email"]
     assert "id" in data
     assert "USER" in data["roles"]
 

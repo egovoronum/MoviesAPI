@@ -24,6 +24,13 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             data=login_data,
             expected_status=expected_status
         )
+    
+    def delete_user(self, user_id, expected_status=200):
+        return self.send_request(
+            method="DELETE",
+            endpoint=f"/user/{user_id}",
+            expected_status=200
+        )
         
     def authenticate(self, user_creds):
         

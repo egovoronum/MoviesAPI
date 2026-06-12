@@ -82,7 +82,22 @@ class MoviesAPI(CustomRequester):
         return self.send_request(
             method="GET",
             endpoint=f"/movies/{movie_id}/reviews",
-            expected_status=200
+            expected_status=expected_status
         )
     
+    def post_review(self, movie_id, data, expected_status=200):
+        return self.send_request(
+            method="POST",
+            data = data,
+            endpoint=f"/movies/{movie_id}/reviews",
+            expected_status=expected_status
+        )
+    
+    def delete_review(self, movie_id, params, expected_status=200):
+        return self.send_request(
+            method="DELETE",
+            params=params,
+            endpoint=f"/movies/{movie_id}/reviews",
+            expected_status=expected_status
+        )
     

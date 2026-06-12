@@ -1,10 +1,6 @@
 ##############################SETUP#####################################################
 
 import requests, pytest, random
-from constants import (
-    BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
-    REGISTER_ENDPOINT, MOVIES_ENDPOINT, AUTH_URL
-)
 from utils.data_generator import DataGenerator
 from faker import Faker
 from custom_requester.custom_requester import CustomRequester
@@ -48,10 +44,17 @@ def admin_api_manager():
     
     http_session.close()
 
-#? нигде не юзаю... managing API 
+#? обычный юзер 
 @pytest.fixture(scope="session")
-def api_manager(session):
-    return ApiManager(session)
+def user_api_manager(registered_user):
+
+    http_session = requests.Session()
+    user_api_manager = ApiManager(http_session)
+    user_api_manager.auth_api.authenticate(registered_user)
+    
+    yield user_api_manager
+
+    http_session.close()
 
 
 # managing API for unauthenticated sessions
@@ -95,17 +98,57 @@ def get_user():
 
     return user_id
 
-
-# *test user + teardown after registration
+#* prepare user and return registration payload
 @pytest.fixture(scope="session")
-def test_user(session):
+def prepared_user():
     
-    api = ApiManager(session)
+    password = fake.password(
+        length=12,
+        special_chars=False,
+        digits=True,
+        upper_case=True,
+        lower_case=True
+    )
 
-    admin_login = {
-        "email": ADMIN_EMAIL,
-        "password": ADMIN_PASSWORD
+    register_data = {
+        "email": DataGenerator.generate_random_email(),
+        "fullName": fake.name(),
+        "password": password,
+        "passwordRepeat": password
     }
+
+    return register_data
+
+
+#* register user
+@pytest.fixture(scope="session")
+def registered_user(
+    unauthenticated_api_manager: ApiManager,
+    admin_api_manager: ApiManager,
+    prepared_user: dict
+    ):
+
+    response = unauthenticated_api_manager.auth_api.register_user(
+        user_data=prepared_user,
+        expected_status=201
+    )
+
+    created_user = response.json()
+    id = created_user["id"]
+
+    data = [prepared_user["email"], prepared_user["password"]]
+
+    yield data
+
+    admin_api_manager.auth_api.delete_user(
+            id,
+            expected_status=200
+        )
+
+
+# *test user + teardown
+@pytest.fixture(scope="function")
+def test_user(admin_api_manager: ApiManager):
 
     user = {
         "register_data": str("Empty"),
@@ -127,33 +170,66 @@ def test_user(session):
         "passwordRepeat": password
     }
     
-    user["register_data"] = register_data
+    yield register_data
 
-    yield user
-
-    if user["id"] is not None:
-
-        response = api.auth_api.login_user(
-            admin_login,
+    admin_api_manager.auth_api.delete_user(
+            register_data["id"],
             expected_status=200
         )
-        
-        token = response.json()["accessToken"]
-        
-        session.headers.update({"Authorization": f"Bearer {token}"})
 
-        api.user_api.delete_user(user["id"], expected_status=200)
 
 ############################MOVIES######################################################
 
-# *gives unexisting movie ID from an int range
-@pytest.fixture(scope="session")
-def movie_id():
+#* PREPARES NEW MOVIE DATA
+@pytest.fixture(scope="function")
+def new_movie_data():
+
+    data = {
+        "name": f"{fake.word()} в {fake.word()}",
+        "imageUrl": "https://example.com/image.png",
+        "price": random.randint(50, 1000),
+        "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
+        "location": "SPB",
+        "published": True,
+        "genreId": 1    
+    }
+
+    return data
+
+#* CREATES NEW MOVIE
+@pytest.fixture(scope="function")
+def create_test_movie(
+    admin_api_manager: ApiManager,
+    new_movie_data: dict):
+
+    response = admin_api_manager.movies_api.create_movie(
+        new_movie_data,
+        expected_status=201
+    )
+
+    data = response.json()
+
+    yield data
+
+    #teardown
+    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+
+
+# *grabs movie ID from create_test_movie
+@pytest.fixture(scope="function")
+def movie_id(create_test_movie):
+
+    id = create_test_movie["id"]
+
+    return id
+
+#* grabs invalid movie ID
+@pytest.fixture(scope="function")
+def invalid_movie_id():
 
     id = random.randint(500000, 600000)
 
     return id
-
 
 # *finds an existing movie and grabs ID
 @pytest.fixture(scope="function")
@@ -249,25 +325,6 @@ def desc_filter():
     return params
 
 
-#* Prepares new movie data 
-@pytest.fixture(scope="session")
-def create_movie(admin_api_manager):
-
-    data = {
-        "name": f"{fake.word()} в {fake.word()}",
-        "imageUrl": "https://example.com/image.png",
-        "price": random.randint(50, 1000),
-        "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
-        "location": "SPB",
-        "published": True,
-        "genreId": 1    
-    }
-
-    yield data
-
-    #teardown
-    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
-
 #* Prepares patch data for editing a movie
 @pytest.fixture(scope="session")
 def patch_movie():
@@ -333,9 +390,12 @@ def genre_data(admin_api_manager):
 
 ########################REVIEWS#########################################################
 
-#* Parses GET movies list until finds a movie with a review
+#* Parses GET movies list until it finds a movie with a review
 @pytest.fixture(scope="function")
-def grab_movie_with_reviews(unauthenticated_api_manager, valid_filter_params):
+def grab_movie_with_reviews(
+    unauthenticated_api_manager: ApiManager,
+    valid_filter_params: dict
+    ):
 
     response_movie_id = unauthenticated_api_manager.movies_api.get_movies(
         params=valid_filter_params,
@@ -372,4 +432,27 @@ def grab_movie_with_reviews(unauthenticated_api_manager, valid_filter_params):
 
     return movie_with_reviews
 
+#* POSTS a review to an existing movie
+@pytest.fixture(scope="function")
+def generate_review(admin_api_manager):
     
+    data = {
+    "rating": 5,
+    "text": f"Отличный фильм, вызывает {fake.word()}"
+    }
+
+    yield data
+
+    params = {}
+
+    params["movieId"] = data["movieId"]
+    params["userId"] = data["userId"]
+
+    try:
+        admin_api_manager.movies_api.delete_review(
+            params=params,
+            expected_status=200
+        )
+
+    except Exception as e:
+        f"Failed to delete review with ID at teardown: {params["userId"]}"
