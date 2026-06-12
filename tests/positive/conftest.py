@@ -220,8 +220,8 @@ def asc_filter():
     params = {
         "pageSize": random.randint(5, 10),
         "page": 1,
-        "minPrice": random.randint(1, 500),
-        "maxPrice": random.randint(500, 2000),
+        "minPrice": random.randint(1, 100),
+        "maxPrice": random.randint(100, 2000),
         "locations": ["MSK", "SPB"],
         "published": True,
         "genreId": 1,
@@ -229,7 +229,25 @@ def asc_filter():
     }
 
     return params
-    
+
+
+#* Prepares descending filter for movies
+@pytest.fixture(scope="function")
+def desc_filter():
+
+    params = {
+        "pageSize": random.randint(5, 10),
+        "page": 1,
+        "minPrice": random.randint(1, 100),
+        "maxPrice": random.randint(100, 2000),
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "desc"
+    }
+
+    return params
+
 
 #* Prepares new movie data 
 @pytest.fixture(scope="session")

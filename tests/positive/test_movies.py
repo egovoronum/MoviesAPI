@@ -1,4 +1,5 @@
 from clients.api_manager import ApiManager
+from utils.time_util import iso_now
 
 #* test GET movie / expect 404
 def test_get_404movie(
@@ -103,7 +104,7 @@ def test_get_movies_by_price(
         )
 
 
-#* test filter ASC DESC 
+#* test filter ASC
 def test_get_movies_asc(
         unauthenticated_api_manager: ApiManager,
         asc_filter: dict
@@ -126,7 +127,32 @@ def test_get_movies_asc(
         assert current >= previous, f"createdAt sorting broken: {current} < {previous}"
         previous = current
 
+
+#* test filter DESC
+def test_get_movies_desc(
+        unauthenticated_api_manager: ApiManager,
+        desc_filter: dict
+    ):
+    
+    response = unauthenticated_api_manager.movies_api.get_movies(
+        params=desc_filter,
+        expected_status=200
+    )
+
+    data = response.json()
+    movies = data["movies"]
+    
+    previous = "2500-05-26T11:00:15.900Z"
+    
+    for movie in movies:
         
+        assert "createdAt" in movie, (f"No createdAt in movie.")
+        current = movie["createdAt"]
+        assert current < iso_now(), f"CreatedAt is > than current time. Double-check."
+        assert current <= previous, f"createdAt sorting broken: {current} > {previous}"
+        previous = current
+        
+
 #* test create and teardown a movie
 def test_create_movie(
         admin_api_manager: ApiManager,

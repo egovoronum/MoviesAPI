@@ -5,6 +5,8 @@ class MoviesAPI(CustomRequester):
         super().__init__(session, base_url="https://api.dev-cinescope.coconutqa.ru")
         self.session=session
 
+#######################MOVIES###########################################################
+
     def get_movie(self, movie_id:int, expected_status=[200, 404]):
         return self.send_request(
             method="GET",
@@ -42,7 +44,9 @@ class MoviesAPI(CustomRequester):
             endpoint=f"/movies/{movie_id}",
             expected_status=expected_status
         )
-    
+
+############################GENRES######################################################
+
     def get_genre(self, genre_id:int, expected_status=200):
         return self.send_request(
             method="GET",
@@ -71,3 +75,5 @@ class MoviesAPI(CustomRequester):
             endpoint=f"/genres/{genre_id}",
             expected_status=expected_status
         )
+    
+###################################REVIEWS##############################################
