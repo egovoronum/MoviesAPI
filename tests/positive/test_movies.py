@@ -283,3 +283,26 @@ def test_delete_random_genre(
     assert "name" in data, f"No name in data"
 
 ###########################REVIEWS######################################################
+
+#* test GET a random movie review
+def test_movie_review(
+        unauthenticated_api_manager: ApiManager,
+        grab_movie_with_reviews: int
+    ):
+    
+    response = unauthenticated_api_manager.movies_api.get_review(
+        movie_id=grab_movie_with_reviews,
+        expected_status=200
+    )
+
+    reviews = response.json()
+    
+    assert len(reviews) > 0, f""
+
+    for review in reviews:
+        assert "userId" in review
+        assert "rating" in review
+        assert "createdAt" in review
+        assert "hidden" in review
+        assert "user" in review
+        assert "fullName" in review["user"]

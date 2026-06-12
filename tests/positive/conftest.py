@@ -182,7 +182,7 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
 def valid_filter_params():
 
     params = {
-        "pageSize": random.randint(1, 10),
+        "pageSize": random.randint(10, 15),
         "page": 1,
         "minPrice": random.randint(1, 200),
         "maxPrice": random.randint(200, 1500),
@@ -331,3 +331,45 @@ def genre_data(admin_api_manager):
     except Exception as e:
         f"Failed to delete genre with ID at teardown: {genre_id}"
 
+########################REVIEWS#########################################################
+
+#* Parses GET movies list until finds a movie with a review
+@pytest.fixture(scope="function")
+def grab_movie_with_reviews(unauthenticated_api_manager, valid_filter_params):
+
+    response_movie_id = unauthenticated_api_manager.movies_api.get_movies(
+        params=valid_filter_params,
+        expected_status=200
+    )
+
+    data = response_movie_id.json()
+
+    movies = data["movies"]
+    movie_with_reviews = None
+
+    if len(movies) < 1:
+        raise RuntimeError("Couldn't grab as movie list length is less than 1!")
+    
+    movie = movies[0]
+
+    for movie in movies:    
+
+        movie_id = movie["id"]
+
+        response_review = unauthenticated_api_manager.movies_api.get_review(
+            movie_id,
+            expected_status=200
+        )
+
+        reviews = response_review.json()
+
+        if len(reviews) > 0:
+            movie_with_reviews = movie_id
+            break
+    
+    if movie_with_reviews is None:
+        pytest.skip("No movies with reviews found")
+
+    return movie_with_reviews
+
+    

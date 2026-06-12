@@ -77,3 +77,12 @@ class MoviesAPI(CustomRequester):
         )
     
 ###################################REVIEWS##############################################
+
+    def get_review(self, movie_id, expected_status=200):
+        return self.send_request(
+            method="GET",
+            endpoint=f"/movies/{movie_id}/reviews",
+            expected_status=200
+        )
+    
+    
