@@ -178,7 +178,7 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
 
 # *prepares general valid filter parameters for /movies
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def valid_filter_params():
 
     params = {
@@ -196,7 +196,7 @@ def valid_filter_params():
 
 
 # *prepares valid price filter parameters for /movies
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def valid_price_filter():
 
     params = {
@@ -213,6 +213,24 @@ def valid_price_filter():
     return params
 
 
+#* Prepares ascending filter for movies
+@pytest.fixture(scope="function")
+def asc_filter():
+
+    params = {
+        "pageSize": random.randint(5, 10),
+        "page": 1,
+        "minPrice": random.randint(1, 500),
+        "maxPrice": random.randint(500, 2000),
+        "locations": ["MSK", "SPB"],
+        "published": True,
+        "genreId": 1,
+        "createdAt": "asc"
+    }
+
+    return params
+    
+
 #* Prepares new movie data 
 @pytest.fixture(scope="session")
 def create_movie(admin_api_manager):
@@ -221,7 +239,7 @@ def create_movie(admin_api_manager):
         "name": f"{fake.word()} в {fake.word()}",
         "imageUrl": "https://example.com/image.png",
         "price": random.randint(50, 1000),
-        "description": f"{fake.text(2)}, ведь не все так однозначно с {fake.text(2)}",
+        "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
         "location": "SPB",
         "published": True,
         "genreId": 1    
@@ -240,7 +258,7 @@ def patch_movie():
         "name": f"{fake.word()} в {fake.word()}",
         "imageUrl": "https://example.com/image.png",
         "price": random.randint(50, 1000),
-        "description": f"{fake.text(2)} вызвал сомнения у {fake.text(2)}",
+        "description": f"{fake.text(5)} вызвал сомнения у {fake.text(5)}",
         "location": "SPB",
         "published": True,
         "genreId": 1    
