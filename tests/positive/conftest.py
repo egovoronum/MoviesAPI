@@ -191,7 +191,7 @@ def new_movie_data():
         "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
         "location": "SPB",
         "published": True,
-        "genreId": 1    
+        "genreId": 1  #! <----------  ПРОВЕРИТЬ ЧТО ДЕЛАТЬ С ЭТОЙ МРАЗЬЮ 
     }
 
     return data
@@ -252,19 +252,31 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
     return id
 
+@pytest.fixture(scope="session")
+def filter_parameters():
+
+    parameters = {
+        "pageSize": 10,
+        "page": 1,
+        "minPrice": 500,
+        "maxPrice": 1000,
+        "locations": ["MSK", "SPB"],
+        "published": True,
+    }
+
+    return parameters
 
 # *prepares general valid filter parameters for /movies
 @pytest.fixture(scope="function")
 def valid_filter_params():
 
     params = {
-        "pageSize": random.randint(10, 15),
+        "pageSize": 10,
         "page": 1,
-        "minPrice": random.randint(1, 200),
-        "maxPrice": random.randint(200, 1500),
-        "locations": ["MSK", "SPB"],
+        "minPrice": 1,
+        "maxPrice": 1000,
+        "locations": "MSK",
         "published": True,
-        "genreId": 1,
         "createdAt": "asc"
     }
 
@@ -282,7 +294,6 @@ def valid_price_filter():
         "maxPrice": random.randint(500, 2000),
         "locations": ["MSK", "SPB"],
         "published": True,
-        "genreId": 1,
         "createdAt": "asc"
     }
 
@@ -300,7 +311,6 @@ def asc_filter():
         "maxPrice": random.randint(100, 2000),
         "locations": ["MSK", "SPB"],
         "published": True,
-        "genreId": 1,
         "createdAt": "asc"
     }
 
@@ -318,7 +328,6 @@ def desc_filter():
         "maxPrice": random.randint(100, 2000),
         "locations": ["MSK", "SPB"],
         "published": True,
-        "genreId": 1,
         "createdAt": "desc"
     }
 

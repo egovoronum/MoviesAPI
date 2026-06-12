@@ -17,7 +17,7 @@ class MoviesAPI(CustomRequester):
     def get_movies(self, params:dict, expected_status=200):
         return self.send_request(
             method="GET",
-            endpoint=f"/movies/",
+            endpoint=f"/movies",
             params=params,
             expected_status=expected_status
         )
@@ -25,7 +25,7 @@ class MoviesAPI(CustomRequester):
     def create_movie(self, movie_data:dict, expected_status=200):
         return self.send_request(
             method="POST",
-            endpoint=f"/movies/",
+            endpoint=f"/movies",
             data=movie_data,
             expected_status=expected_status
         )

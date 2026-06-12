@@ -49,14 +49,14 @@ def test_get_movies(
         unauthenticated_api_manager: ApiManager,
         valid_filter_params: dict
     ):
-    
+
     page_size = valid_filter_params["pageSize"]
     
     response = unauthenticated_api_manager.movies_api.get_movies(
-        valid_filter_params, 
+        params=valid_filter_params, 
         expected_status=200
     )
-    
+
     data = response.json()
     movies = data["movies"]
     
