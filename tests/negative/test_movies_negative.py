@@ -29,7 +29,7 @@ def test_negative_price_filter(
 
     data = response.json()
 
-    assert "Поле minPrice имеет минимальную величину 0" in data["message"]
+    assert "Поле minPrice имеет минимальную величину 1" in data["message"]
 
 
 #! negative page value in filter

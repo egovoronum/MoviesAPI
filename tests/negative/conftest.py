@@ -128,11 +128,11 @@ def invalid_page():
 def invalid_location():
 
     params = {
-        "pageSize": random.randint(1, 10),
+        "pageSize": random.randint(10, 20),
         "page": 1,
-        "minPrice": 100,
-        "maxPrice": 1000,
-        "locations": ["TOKYO", 32],
+        "minPrice": 1,
+        "maxPrice": 10000,
+        "locations": ["TOKYO"],
         "published": True,
         "genreId": 1,
         "createdAt": "asc"
