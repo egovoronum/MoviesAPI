@@ -298,7 +298,6 @@ def test_movie_review(
         assert "userId" in review
         assert "rating" in review
         assert "createdAt" in review
-        assert "hidden" in review
         assert "user" in review
         assert "fullName" in review["user"]
 

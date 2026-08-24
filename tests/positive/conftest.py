@@ -182,7 +182,16 @@ def test_user(admin_api_manager: ApiManager):
 
 #* PREPARES NEW MOVIE DATA
 @pytest.fixture(scope="function")
-def new_movie_data():
+def new_movie_data(unauthenticated_api_manager):
+
+    #grab existing random genre first to avoid error
+    response = unauthenticated_api_manager.movies_api.get_genres(
+        expected_status=200
+    )
+
+    genres = response.json()
+    genre = random.choice(genres)
+    genre_id = genre["id"]
 
     data = {
         "name": f"{fake.word()} в {fake.word()}",
@@ -191,7 +200,7 @@ def new_movie_data():
         "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
         "location": "SPB",
         "published": True,
-        "genreId": 1  #! <----------  ПРОВЕРИТЬ ЧТО ДЕЛАТЬ С ЭТОЙ МРАЗЬЮ 
+        "genreId": genre_id  
     }
 
     return data
