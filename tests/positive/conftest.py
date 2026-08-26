@@ -93,7 +93,7 @@ def get_user():
 
     return user_id
 
-#* prepare user and return registration payload
+#* prepare user and return registration payload for SESSION
 @pytest.fixture(scope="session")
 def prepared_user():
     
@@ -114,6 +114,26 @@ def prepared_user():
 
     return register_data
 
+#* prepare oneshot user
+@pytest.fixture(scope="function")
+def oneshot_user():
+   
+    password = fake.password(
+        length=12,
+        special_chars=False,
+        digits=True,
+        upper_case=True,
+        lower_case=True
+    )
+
+    register_data = {
+        "email": DataGenerator.generate_random_email(),
+        "fullName": fake.name(),
+        "password": password,
+        "passwordRepeat": password
+    }
+
+    return register_data  
 
 #* register user
 @pytest.fixture(scope="session")
@@ -141,7 +161,7 @@ def registered_user(
         )
 
 
-# *test user + teardown
+# *creates a test user + teardown
 @pytest.fixture(scope="function")
 def test_user(admin_api_manager: ApiManager):
 
@@ -167,14 +187,31 @@ def test_user(admin_api_manager: ApiManager):
     
     yield register_data
 
-    user_id = int(register_data["id"])
+    user_id = register_data["id"]
 
     admin_api_manager.auth_api.delete_user(
             user_id,
             expected_status=200
         )
 
+# user deletion
+@pytest.fixture(scope="function")
+def test_user_deletion(unauthenticated_api_manager: ApiManager,
+                       oneshot_user: dict
+                       ):
 
+    response = unauthenticated_api_manager.auth_api.register_user(
+            user_data=oneshot_user,
+            expected_status=201
+        )
+
+    oneshot_user = response.json()
+    id = oneshot_user["id"]
+
+    return id
+
+
+    
 #* PREPARES NEW MOVIE DATA
 @pytest.fixture(scope="function")
 def new_movie_data(unauthenticated_api_manager):

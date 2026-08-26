@@ -43,3 +43,13 @@ def test_get_user_info(
     )
 
     data = response.json()
+
+#* test delete user
+def test_delete_user(
+        admin_api_manager: ApiManager,
+        test_user_deletion: str):
+
+    response = admin_api_manager.user_api.delete_user(
+        test_user_deletion,
+        expected_status=200
+    )

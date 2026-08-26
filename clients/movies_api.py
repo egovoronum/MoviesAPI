@@ -5,9 +5,7 @@ class MoviesAPI(CustomRequester):
     def __init__(self, session):
         super().__init__(session, base_url=BASE_URL)
         self.session=session
-
-#######################MOVIES###########################################################
-
+        
     def get_movie(self, movie_id:int, expected_status=[200, 404]):
         return self.send_request(
             method="GET",
