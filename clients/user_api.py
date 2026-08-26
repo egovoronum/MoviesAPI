@@ -1,9 +1,9 @@
-from typing import Union, Iterable
+import requests
 from custom_requester.custom_requester import CustomRequester
 from constants import AUTH_URL
 
 class UserAPI(CustomRequester):
-    def __init__(self, session):
+    def __init__(self, session: requests.Session):
         super().__init__(session=session, base_url=AUTH_URL)
         self.session = session
         

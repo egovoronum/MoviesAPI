@@ -1,9 +1,10 @@
 import constants
 import custom_requester.custom_requester
+import requests
 
 class AuthAPI(custom_requester.custom_requester.CustomRequester):
     
-    def __init__(self, session):
+    def __init__(self, session: requests.Session):
         super().__init__(
             session=session,
             base_url="https://auth.dev-cinescope.coconutqa.ru"

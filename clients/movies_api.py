@@ -1,11 +1,12 @@
 from custom_requester.custom_requester import CustomRequester
+import requests
 from constants import BASE_URL
 
 class MoviesAPI(CustomRequester):
-    def __init__(self, session):
+    def __init__(self, session: requests.Session):
         super().__init__(session, base_url=BASE_URL)
         self.session=session
-        
+
     def get_movie(self, movie_id:int, expected_status=[200, 404]):
         return self.send_request(
             method="GET",
