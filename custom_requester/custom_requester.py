@@ -51,8 +51,6 @@ class CustomRequester:
 
         return response
 
-########################################################################################
-
     def _update_session_headers(self, headers: dict):
         self.session.headers.update(headers)
 
