@@ -1,5 +1,3 @@
-##############################SETUP#####################################################
-
 import requests, pytest, random
 from constants import (
     BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
@@ -24,7 +22,6 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 
-################################SETUP2###################################################
 
 # session init 
 @pytest.fixture(scope="session")
@@ -52,7 +49,6 @@ def api_manager(session):
     return ApiManager(session)
 
 
-# managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
 
@@ -69,8 +65,6 @@ def api_login(session):
 
     return AuthAPI(session)
 
-    
-#############################FIXTURES###################################################
 
 # !prepares an invalid price filter minPrice>maxPrice
 @pytest.fixture(scope="session")
@@ -157,4 +151,3 @@ def invalid_movie_data(admin_api_manager):
 
     return data 
     
-###############################END######################################################

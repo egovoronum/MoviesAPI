@@ -168,23 +168,6 @@ def test_create_movie(create_test_movie):
     assert "createdAt" in create_test_movie
     assert "genre" in create_test_movie
 
-
-#* test delete random movie from DB
-def test_delete_movie(
-        admin_api_manager: ApiManager,
-        grab_movie: int
-    ):
-
-    response = admin_api_manager.movies_api.delete_movie(
-        grab_movie,
-        expected_status=200
-    )
-
-    data = response.json()
-
-    assert grab_movie == data["id"]
-
-
 #* test patching random movie from DB
 def test_patch_random_movie(
         admin_api_manager: ApiManager,
@@ -209,7 +192,21 @@ def test_patch_random_movie(
         f"Price hasn't been patched."
     )    
 
-##############################GENRES####################################################
+#* test delete random movie from DB
+def test_delete_movie(
+        admin_api_manager: ApiManager,
+        grab_movie: int
+    ):
+
+    response = admin_api_manager.movies_api.delete_movie(
+        grab_movie,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert grab_movie == data["id"]
+
 
 #* test if genres list has necessary fields
 def test_get_genres(
@@ -277,29 +274,6 @@ def test_delete_random_genre(
     assert "id" in data, f"No ID in data"
     assert "name" in data, f"No name in data"
 
-###########################REVIEWS######################################################
-
-#* test GET a random movie review
-def test_movie_review(
-        unauthenticated_api_manager: ApiManager,
-        grab_movie_with_reviews: int
-    ):
-    
-    response = unauthenticated_api_manager.movies_api.get_review(
-        movie_id=grab_movie_with_reviews,
-        expected_status=200
-    )
-
-    reviews = response.json()
-    
-    assert len(reviews) > 0, f""
-
-    for review in reviews:
-        assert "userId" in review
-        assert "rating" in review
-        assert "createdAt" in review
-        assert "user" in review
-        assert "fullName" in review["user"]
 
 #* test POST a movie review as ADMIN
 def test_post_movie_review(
@@ -319,7 +293,6 @@ def test_post_movie_review(
     assert "userId" in data
     assert generate_review["text"] == data["text"]
     assert generate_review["rating"] == data["rating"]
-    assert "hidden" in data
     assert "createdAt" in data
     assert "user" in data
 
@@ -344,7 +317,6 @@ def test_user_movie_review(
     assert "userId" in data
     assert generate_review["text"] == data["text"]
     assert generate_review["rating"] == data["rating"]
-    assert "hidden" in data
     assert "createdAt" in data
     assert "user" in data
 

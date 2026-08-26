@@ -10,7 +10,7 @@ class CustomRequester:
         "Accept": "application/json"
     }
 
-    def __init__(self, session, base_url):
+    def __init__(self, session: requests.Session, base_url: str):
 
         self.session = session
         self.base_url = base_url

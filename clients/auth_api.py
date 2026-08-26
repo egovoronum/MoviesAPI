@@ -9,7 +9,7 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             base_url="https://auth.dev-cinescope.coconutqa.ru"
         )
     
-    def register_user(self, user_data, expected_status=201):
+    def register_user(self, user_data:dict, expected_status=201):
         return self.send_request(
             method="POST",
             endpoint=constants.REGISTER_ENDPOINT,
@@ -17,7 +17,7 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             expected_status=expected_status
         )
         
-    def login_user(self, login_data, expected_status=200):
+    def login_user(self, login_data:dict, expected_status=200):
         return self.send_request(
             method="POST",
             endpoint=constants.LOGIN_ENDPOINT,
@@ -25,14 +25,14 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             expected_status=expected_status
         )
     
-    def delete_user(self, user_id, expected_status=200):
+    def delete_user(self, user_id:int, expected_status=200):
         return self.send_request(
             method="DELETE",
             endpoint=f"/user/{user_id}",
             expected_status=200
         )
         
-    def authenticate(self, user_creds):
+    def authenticate(self, user_creds:list):
         
         login_data = {
             "email": user_creds[0],

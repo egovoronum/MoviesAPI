@@ -34,7 +34,7 @@ def test_admin_login(
 #* Test get user info as an unauthenticated user
 def test_get_user_info(
         unauthenticated_api_manager: ApiManager,
-        get_user: str
+        get_user: int
     ):
 
     response = unauthenticated_api_manager.user_api.get_user_info(

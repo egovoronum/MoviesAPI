@@ -1,4 +1,3 @@
-##############################SETUP#####################################################
 
 import requests, pytest, random
 from utils.data_generator import DataGenerator
@@ -22,7 +21,6 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 
-#####################SETUP2#############################################################
 
 # session init 
 @pytest.fixture(scope="session")
@@ -73,9 +71,6 @@ def unauthenticated_api_manager():
 def api_login(session):
 
     return AuthAPI(session)
-
-
-#########################FIXTURES#######################################################
 
 
 #* admin login data
@@ -172,13 +167,13 @@ def test_user(admin_api_manager: ApiManager):
     
     yield register_data
 
+    user_id = int(register_data["id"])
+
     admin_api_manager.auth_api.delete_user(
-            register_data["id"],
+            user_id,
             expected_status=200
         )
 
-
-############################MOVIES######################################################
 
 #* PREPARES NEW MOVIE DATA
 @pytest.fixture(scope="function")
@@ -256,7 +251,7 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
     if len(movies) < 1:
         raise RuntimeError("Couldn't grab as movie list length is less than 1!")
     
-    movie = movies[0]
+    movie = movies[1]
     id = movie["id"]
 
     return id
@@ -359,7 +354,6 @@ def patch_movie():
 
     return data
 
-###########################GENRES################################################
 
 #* gets a list of random genres
 @pytest.fixture(scope="session")
@@ -406,7 +400,6 @@ def genre_data(admin_api_manager):
     except Exception as e:
         f"Failed to delete genre with ID at teardown: {genre_id}"
 
-########################REVIEWS#########################################################
 
 #* Parses GET movies list until it finds a movie with a review
 @pytest.fixture(scope="function")

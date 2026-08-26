@@ -1,8 +1,9 @@
 from custom_requester.custom_requester import CustomRequester
+from constants import BASE_URL
 
 class MoviesAPI(CustomRequester):
     def __init__(self, session):
-        super().__init__(session, base_url="https://api.dev-cinescope.coconutqa.ru")
+        super().__init__(session, base_url=BASE_URL)
         self.session=session
 
 #######################MOVIES###########################################################
@@ -45,8 +46,6 @@ class MoviesAPI(CustomRequester):
             expected_status=expected_status
         )
 
-############################GENRES######################################################
-
     def get_genre(self, genre_id:int, expected_status=200):
         return self.send_request(
             method="GET",
@@ -61,7 +60,7 @@ class MoviesAPI(CustomRequester):
             expected_status=expected_status
         )
     
-    def create_genre(self, data, expected_status=200):
+    def create_genre(self, data:dict, expected_status=200):
         return self.send_request(
             method="POST",
             data=data,
@@ -76,8 +75,6 @@ class MoviesAPI(CustomRequester):
             expected_status=expected_status
         )
     
-###################################REVIEWS##############################################
-
     def get_review(self, movie_id, expected_status=200):
         return self.send_request(
             method="GET",
@@ -85,7 +82,7 @@ class MoviesAPI(CustomRequester):
             expected_status=expected_status
         )
     
-    def post_review(self, movie_id, data, expected_status=200):
+    def post_review(self, movie_id:int, data:dict, expected_status=201):
         return self.send_request(
             method="POST",
             data = data,
@@ -93,7 +90,7 @@ class MoviesAPI(CustomRequester):
             expected_status=expected_status
         )
     
-    def delete_review(self, movie_id, params, expected_status=200):
+    def delete_review(self, movie_id:int, params:dict, expected_status=200):
         return self.send_request(
             method="DELETE",
             params=params,
