@@ -9,8 +9,6 @@ from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
 
-# *API classes import
-
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
 from clients.user_api import UserAPI

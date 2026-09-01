@@ -37,7 +37,6 @@ class CustomRequester:
         if need_logging:
             self.log_request_and_response(response)
 
-        # * allowed tuples and lists for statuses // requires Typing 
         if isinstance(expected_status, (list, tuple)):
             if response.status_code not in expected_status:
                 raise ValueError(

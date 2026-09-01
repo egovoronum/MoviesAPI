@@ -5,7 +5,7 @@ class User:
         self.email = email
         self.password = password
         self.roles = roles
-        self.api = api  # Сюда будем передавать экземпляр API Manager для запросов
+        self.api = api  
 
     @property
     def creds(self):
