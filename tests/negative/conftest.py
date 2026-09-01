@@ -17,8 +17,14 @@ from clients.user_api import UserAPI
 
 load_dotenv()
 
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+def env_check(name: str) -> str:
+    value = os.getenv(name)
+    if value is None:
+        raise RuntimeError(f"Required environment variable '{name}' is missing")
+    return value
+
+ADMIN_EMAIL = env_check("ADMIN_EMAIL")
+ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 
 fake = Faker("ru_RU")
 

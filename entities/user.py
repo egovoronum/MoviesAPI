@@ -9,4 +9,7 @@ class User:
 
     @property
     def creds(self):
-        return self.email, self.password
+
+        credentials = [self.email, self.password]
+
+        return credentials

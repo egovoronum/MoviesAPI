@@ -4,9 +4,13 @@ from clients.movies_api import MoviesAPI
 import requests
 
 class ApiManager:
-        def __init__(self, session: requests.Session):
+    def __init__(self, session: requests.Session):
             self.session = session
             self.auth_api = AuthAPI(session)
             self.user_api = UserAPI(session)
             self.movies_api = MoviesAPI(session)
-            
+
+    def close_session(self):
+        self.session.close()
+
+             
