@@ -48,8 +48,6 @@ def test_admin_login(
         expected_status=200
     )
 
-    data = response.json()
-
 
 def test_get_user_info(
         unauthenticated_api_manager: ApiManager,

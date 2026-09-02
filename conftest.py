@@ -72,7 +72,7 @@ def user_session():
 
 
 @pytest.fixture
-def common_user(user_session, super_admin, create_user_data):
+def common_user(user_session, super_admin: User, create_user_data: dict):
     new_session = user_session()
 
     common_user = User(
@@ -88,7 +88,7 @@ def common_user(user_session, super_admin, create_user_data):
 
 
 @pytest.fixture
-def admin_user(user_session, admin_user, create_user_data):
+def admin_user(user_session, admin_user: User, create_user_data: dict):
     new_session = user_session()
 
     admin_user = User(
@@ -119,7 +119,7 @@ def super_admin(user_session):
 
 
 @pytest.fixture(scope="function")
-def valid_movie_data():
+def valid_movie_data() -> dict:
 
     data = {
         "name": f"{fake.word()} в {fake.word()}",
@@ -135,7 +135,7 @@ def valid_movie_data():
 
 
 @pytest.fixture(scope="session")
-def invalid_movie_data():
+def invalid_movie_data() -> dict:
 
     data = {
         "name": f"{fake.word()} в {fake.word()}",

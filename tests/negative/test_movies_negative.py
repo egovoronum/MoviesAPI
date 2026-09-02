@@ -20,11 +20,11 @@ class TestMovieFilters:
 
     def test_negative_price_filter(
             self,
-            unauthenticated_api_manager: ApiManager, 
+            common_user, 
             invalid_price_filter_negative_min: dict
         ):
 
-        response = unauthenticated_api_manager.movies_api.get_movies(
+        response = common_user.api.movies_api.get_movies(
             invalid_price_filter_negative_min,
             expected_status=400
         )
@@ -36,11 +36,11 @@ class TestMovieFilters:
 
     def test_negative_page_filter(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user,
             invalid_page: dict
         ):
         
-        response = unauthenticated_api_manager.movies_api.get_movies(
+        response = common_user.api.movies_api.get_movies(
             invalid_page,
             expected_status=400
         )
@@ -54,11 +54,11 @@ class TestMovieFilters:
 
     def test_invalid_location_filter(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user,
             invalid_location: dict       
         ):
 
-        response = unauthenticated_api_manager.movies_api.get_movies(
+        response = common_user.api.movies_api.get_movies(
             invalid_location,
             expected_status=400
         )

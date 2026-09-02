@@ -1,5 +1,31 @@
+import pytest
 from clients.api_manager import ApiManager
 from utils.time_util import iso_now
+
+@pytest.mark.parametrize("filter_parameters", [
+    {
+        "minPrice": 1,
+        "maxPrice": 1000,
+    },
+    {
+        "locations": "MSK"
+    },
+    {
+        "genreId": 1
+    }
+])
+def test_parametrized_filters(
+        common_user,
+        filter_parameters
+    ):
+
+    response = common_user.api.movies_api.get_movies(
+        params=filter_parameters,
+        expected_status=200
+    )
+
+    data = response.json()
+
 
 class TestGetMovies:
 
