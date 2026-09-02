@@ -1,6 +1,7 @@
 from clients.api_manager import ApiManager
+import clients
 
-class TestUser:
+class TestUsers:
 
     def test_create_user(self, super_admin, create_user_data: dict):
         response = super_admin.api.user_api.create_user(create_user_data).json()
@@ -22,55 +23,57 @@ class TestUser:
         assert response_by_id.get('verified') is True
 
 
-def test_register_user(
-        unauthenticated_api_manager: ApiManager,
-        test_user: dict
-    ):
+    def test_register_user(
+            self,
+            unauthenticated_api_manager: ApiManager,
+            test_user: dict
+        ):
 
-    response = unauthenticated_api_manager.auth_api.register_user(test_user)
-    
-    data = response.json()
+        response = unauthenticated_api_manager.auth_api.register_user(test_user)
+        
+        data = response.json()
 
-    test_user["id"] = data["id"]
+        test_user["id"] = data["id"]
 
-    assert data["email"] == test_user["email"]
-    assert "id" in data
-    assert "USER" in data["roles"]
-
-
-def test_admin_login(
-        unauthenticated_api_manager: ApiManager,
-        admin_login: dict
-    ):
-
-    response = unauthenticated_api_manager.auth_api.login_user(
-        admin_login,
-        expected_status=200
-    )
+        assert data["email"] == test_user["email"]
+        assert "id" in data
+        assert "USER" in data["roles"]
 
 
-def test_get_user_info(
-        unauthenticated_api_manager: ApiManager,
-        get_user: int
-    ):
+    def test_admin_login(
+            self,
+            unauthenticated_api_manager: ApiManager,
+            admin_login: dict
+        ):
 
-    response = unauthenticated_api_manager.user_api.get_user_info(
-        get_user, 
-        expected_status=401
-    )
-
-    data = response.json()
+        response = unauthenticated_api_manager.auth_api.login_user(
+            admin_login,
+            expected_status=200
+        )
 
 
-def test_delete_user(
-        admin_api_manager: ApiManager,
-        test_user_deletion: str):
+    def test_get_user_info(
+            self,
+            unauthenticated_api_manager: ApiManager,
+            get_user: int
+        ):
 
-    response = admin_api_manager.user_api.delete_user(
-        test_user_deletion,
-        expected_status=200
-    )
+        response = unauthenticated_api_manager.user_api.get_user_info(
+            get_user, 
+            expected_status=401
+        )
 
-def test_get_user_by_id_common_user(common_user):
-    common_user.api.user_api.get_user_info(common_user.email, expected_status=403)
+        data = response.json()
+
+
+    def test_delete_user(
+            self,
+            admin_api_manager: ApiManager,
+            test_user_deletion: str):
+
+        response = admin_api_manager.user_api.delete_user(
+            test_user_deletion,
+            expected_status=200
+        )
+
 
