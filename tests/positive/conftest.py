@@ -381,7 +381,7 @@ def desc_filter():
 
 
 #* Prepares patch data for editing a movie
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def patch_movie():
 
     data = {
