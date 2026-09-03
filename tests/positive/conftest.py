@@ -215,7 +215,6 @@ def test_user_deletion(unauthenticated_api_manager: ApiManager,
 
     return id
 
-
     
 #* PREPARES NEW MOVIE DATA
 @pytest.fixture(scope="function")
@@ -242,7 +241,7 @@ def new_movie_data(unauthenticated_api_manager):
 
     return data
 
-#* CREATES NEW MOVIE
+#* CREATES NEW MOVIE & tears it down
 @pytest.fixture(scope="function")
 def create_test_movie(
     admin_api_manager: ApiManager,

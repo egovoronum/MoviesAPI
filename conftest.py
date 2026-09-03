@@ -1,9 +1,15 @@
-import requests, pytest, random
+# ─── стандартные библиотеки ────────────────────────────────────────────
 import os
+import random
+
+# ─── доп библиотеки ────────────────────────────────────────────────────────
+import requests
+import pytest
 from dotenv import load_dotenv
-from utils.data_generator import DataGenerator
 from faker import Faker
-fake = Faker("ru_RU")
+
+# ─── модули проекта ────────────────────────────────────────────────────────────
+from utils.data_generator import DataGenerator
 from custom_requester.custom_requester import CustomRequester
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
@@ -12,7 +18,10 @@ from clients.movies_api import MoviesAPI
 from entities.user import User
 from enums.roles import Roles
 
+# ─── init─────────────────────────────────────────────────────────────
+fake = Faker("ru_RU")
 load_dotenv()
+
 
 def env_check(name: str) -> str:
     value = os.getenv(name)
@@ -25,7 +34,7 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 
 
 @pytest.fixture(scope="function")
-def oneshot_user():
+def oneshot_user() -> dict[str, str]:
    
     password = fake.password(
         length=12,
@@ -46,7 +55,7 @@ def oneshot_user():
 
 
 @pytest.fixture(scope="function")
-def create_user_data(oneshot_user):
+def create_user_data(oneshot_user) -> dict:
     updated_data = oneshot_user.copy()
     updated_data.update({
         "verified": True,
@@ -72,7 +81,7 @@ def user_session():
 
 
 @pytest.fixture
-def common_user(user_session, super_admin: User, create_user_data: dict):
+def common_user(user_session, super_admin: User, create_user_data: dict) -> User:
     new_session = user_session()
 
     common_user = User(
@@ -88,7 +97,7 @@ def common_user(user_session, super_admin: User, create_user_data: dict):
 
 
 @pytest.fixture
-def admin_user(user_session, admin_user: User, create_user_data: dict):
+def admin_user(user_session, super_admin: User, create_user_data: dict) -> User:
     new_session = user_session()
 
     admin_user = User(
@@ -97,14 +106,14 @@ def admin_user(user_session, admin_user: User, create_user_data: dict):
         [Roles.ADMIN],
         new_session)
 
-    admin_user.api.user_api.create_user(create_user_data)
+    super_admin.api.user_api.create_user(create_user_data)
     admin_user.api.auth_api.authenticate(admin_user.creds)
 
     return admin_user
 
 
 @pytest.fixture
-def super_admin(user_session):
+def super_admin(user_session) -> User:
     new_session = user_session()
 
     super_admin = User(
