@@ -4,8 +4,6 @@ from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
 
-
-
 # Написать тест, который проверяет удаление фильмов но с ролевой моделью, 
 # по доке только супер админы могут удалять так же он должен быть параметризован
 
@@ -14,7 +12,7 @@ fake = Faker("ru_RU")
     ("admin_user", 403),
     ("common_user", 403),
 ], ids=["SUPER ADMIN", "ADMIN USER", "COMMON USER"])
-def test_delete_random_movie(request, super_admin, user, status):
+def test_delete_movie_parametrized(request, super_admin, user, status):
 
     client = request.getfixturevalue(user)
 
