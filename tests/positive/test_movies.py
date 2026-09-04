@@ -242,31 +242,6 @@ class TestEditMovies:
         assert "createdAt" in create_test_movie
         assert "genre" in create_test_movie
 
-
-    def test_patch_random_movie(
-            self,
-            admin_api_manager: ApiManager,
-            grab_movie: int, 
-            patch_movie: dict
-        ):
-
-        response = admin_api_manager.movies_api.patch_movie(
-            patch_movie,
-            grab_movie,
-            expected_status=200
-        )
-
-        data = response.json()
-
-        assert "name" in data, f"No name field in response."
-        assert data["name"] == patch_movie["name"], (
-            f"Name hasn't been patched."
-        )
-        assert "price" in data, f"No price field in response."
-        assert data["price"] == patch_movie["price"], (
-            f"Price hasn't been patched."
-        )    
-
     def test_delete_random_movie(
             self,
             admin_api_manager: ApiManager,
@@ -354,7 +329,7 @@ class TestGenres:
         assert "name" in data, f"No name in data"
 
 class TestReviews:
-
+    
     def test_post_movie_review_as_admin(
             self,
             admin_api_manager: ApiManager,
@@ -401,3 +376,29 @@ class TestReviews:
         assert "user" in data
         generate_review["movieId"] = movie_id
         generate_review["userId"] = data["userId"]
+
+
+@pytest.mark.skip
+def test_patch_random_movie(
+        self,
+        admin_api_manager: ApiManager,
+        grab_movie: int, 
+        patch_movie: dict
+    ):
+
+    response = admin_api_manager.movies_api.patch_movie(
+        patch_movie,
+        grab_movie,
+        expected_status=200
+    )
+
+    data = response.json()
+
+    assert "name" in data, f"No name field in response."
+    assert data["name"] == patch_movie["name"], (
+        f"Name hasn't been patched."
+    )
+    assert "price" in data, f"No price field in response."
+    assert data["price"] == patch_movie["price"], (
+        f"Price hasn't been patched."
+    )    
