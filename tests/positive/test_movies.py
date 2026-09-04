@@ -3,54 +3,47 @@ from clients.api_manager import ApiManager
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
+from models.base_models import Movie, ApiError
 
-# Написать тест, который проверяет удаление фильмов но с ролевой моделью, 
-# по доке только супер админы могут удалять так же он должен быть параметризован
-
+@pytest.mark.accesscontrol
+@pytest.mark.regression
 @pytest.mark.parametrize("user, status", [
     ("super_admin", 200),
     ("admin_user", 403),
     ("common_user", 403),
 ], ids=["SUPER ADMIN", "ADMIN USER", "COMMON USER"])
-def test_delete_movie_parametrized(request, super_admin, user, status):
+def test_access_delete_movie(
+    request, super_admin, oneshot_movie_skip_teardown, user, status
+    ):
 
     client = request.getfixturevalue(user)
+    created_movie = oneshot_movie_skip_teardown
 
-    response = super_admin.api.movies_api.get_genres(
-            expected_status=200
+    movie_deleted = False
+
+    try:
+        delete_response = client.api.movies_api.delete_movie(
+            created_movie.id,
+            expected_status=status
         )
-    
-    genres = response.json()
-    genre = random.choice(genres)
-    genre_id = genre["id"]
-    
-    data = {
-        "name": f"{fake.word()} в {fake.word()}",
-        "imageUrl": "https://example.com/image.png",
-        "price": random.randint(50, 1000),
-        "description": f"{fake.text(10)} не все так однозначно с {fake.text(10)}",
-        "location": "MSK",
-        "published": True,
-        "genreId": genre_id  
-    }
 
-    response = super_admin.api.movies_api.create_movie(
-        data,
-        expected_status=201
-    )
+        if status == 200:
+            movie_deleted = True
+            deleted_movie = delete_response.json()
+            assert deleted_movie["id"] == created_movie.id
 
-    created_movie = response.json()
+        else:
+            e = ApiError(**delete_response.json())
+            assert e.error == "Forbidden"
+            assert e.statusCode == 403
 
-    assert data["name"] == created_movie["name"]
-
-    delete_response = client.api.movies_api.delete_movie(
-        created_movie["id"],
-        expected_status=status
-    )
-
-    if status == 200:
-        deleted_movie = delete_response.json()
-        assert deleted_movie["id"] == created_movie["id"]
+    finally:
+        if not movie_deleted:
+            super_admin.api.movies_api.delete_movie(
+                created_movie.id,
+                expected_status=200
+            )
+            
 
 class TestParametrizedFilters:
 

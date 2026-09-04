@@ -17,6 +17,7 @@ from clients.user_api import UserAPI
 from clients.movies_api import MoviesAPI
 from entities.user import User
 from enums.roles import Roles
+from models.base_models import Movie, Genre
 
 # ─── init─────────────────────────────────────────────────────────────
 fake = Faker("ru_RU")
@@ -128,7 +129,26 @@ def super_admin(user_session) -> User:
 
 
 @pytest.fixture(scope="function")
-def valid_movie_data() -> dict:
+def oneshot_genre(super_admin):
+
+    data = {
+        "name": f"{fake.word()} и точка!!!"
+    }
+
+    response = super_admin.api.movies_api.create_genre(data, expected_status=201)
+
+    genre = Genre(**response.json())
+    genre_id = genre.id
+
+    yield genre
+    super_admin.api.movies_api.delete_genre(genre_id)
+
+
+@pytest.fixture(scope="function")
+def valid_movie_data(oneshot_genre) -> dict:
+
+    genre = oneshot_genre
+    genre_id = genre.id
 
     data = {
         "name": f"{fake.word()} в {fake.word()}",
@@ -137,7 +157,7 @@ def valid_movie_data() -> dict:
         "description": f"{fake.text(5)} вызвал сомнения у {fake.text(5)}",
         "location": "SPB",
         "published": True,
-        "genreId": 1    
+        "genreId": genre_id    
     }
 
     return data    
@@ -159,4 +179,24 @@ def invalid_movie_data() -> dict:
     return data 
     
 
+@pytest.fixture(scope="function")
+def oneshot_movie(super_admin, valid_movie_data):
 
+    response = super_admin.api.movies_api.create_movie(
+        valid_movie_data,
+        expected_status=201)
+    movie =  Movie(**response.json())
+
+    yield movie
+    super_admin.api.movies_api.delete_movie(movie.id, expected_status=200)
+
+
+@pytest.fixture(scope="function")
+def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
+
+    response = super_admin.api.movies_api.create_movie(
+        valid_movie_data,
+        expected_status=201)
+    movie =  Movie(**response.json())
+
+    return movie
