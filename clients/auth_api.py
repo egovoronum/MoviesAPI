@@ -40,7 +40,7 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             "password": user_creds[1]
         }
         
-        response = self.login_user(login_data).json()
+        response = self.login_user(login_data, expected_status=201).json()
         
         if "accessToken" not in response:
             raise KeyError("token is missing")

@@ -48,7 +48,7 @@ class TestUsers:
 
         response = unauthenticated_api_manager.auth_api.login_user(
             admin_login,
-            expected_status=200
+            expected_status=201
         )
 
 
