@@ -9,3 +9,4 @@ pysocks
 pydantic
 typing
 psycopg2
+psycopg2-binary
