@@ -7,6 +7,7 @@ import requests
 import pytest
 from dotenv import load_dotenv
 from faker import Faker
+from sqlalchemy.orm import Session
 
 # ─── модули проекта ────────────────────────────────────────────────────────────
 from utils.data_generator import DataGenerator
@@ -18,6 +19,7 @@ from clients.movies_api import MoviesAPI
 from entities.user import User
 from enums.roles import Roles
 from models.base_models import Movie, Genre
+from db_requester.db_client import get_db_session
 
 # ─── init─────────────────────────────────────────────────────────────
 fake = Faker("ru_RU")
@@ -200,3 +202,13 @@ def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
     movie =  Movie(**response.json())
 
     return movie
+
+@pytest.fixture(scope="module")
+def db_session() -> Session: # type: ignore
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session # type: ignore
+    db_session.close()

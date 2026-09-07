@@ -8,13 +8,11 @@ HOST = credits.MOVIES_DB_HOST
 PORT = credits.MOVIES_DB_PORT
 DATABASE_NAME = credits.MOVIES_DB_NAME
 
-#  движок для подключения к базе данных
 engine = create_engine(
     f"postgresql+psycopg2://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DATABASE_NAME}",
-    echo=False  # Установить True для отладки SQL запросов
+    echo=True  # Установить True для отладки SQL запросов
 )
 
-#  создаем фабрику сессий
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db_session():
