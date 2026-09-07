@@ -1,7 +1,8 @@
 # use this to generate user data like emails, names and etc. 
-
 import random
 import string
+from datetime import datetime
+
 from faker import Faker
 faker = Faker()
 
@@ -47,3 +48,19 @@ class DataGenerator:
         letters = string.punctuation + string.ascii_letters
         return ''.join(random.choices(letters, k=5))
 
+    @staticmethod
+    def generate_user_data() -> dict:
+        """Генерирует данные для тестового пользователя"""
+        from uuid import uuid4
+
+        return {
+            'id': f'{uuid4()}',  # генерируем UUID как строку
+            'email': DataGenerator.generate_random_email(),
+            'full_name': DataGenerator.generate_random_name(),
+            'password': DataGenerator.generate_random_password(),
+            'created_at': datetime.now(),
+            'updated_at': datetime.now(),
+            'verified': False,
+            'banned': False,
+            'roles': '{USER}'
+        }
