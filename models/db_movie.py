@@ -5,22 +5,18 @@ from typing import Dict, Any
 
 Base = declarative_base()
 
-class LocationEnum(enum.Enum):
-    MSK = "MSK"
-    SPB = "SPB"
-
 class MovieDBModel(Base):
     __tablename__ = 'movies'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String, primary_key=True)
     name = Column(String)
-    price = Column(Integer)
+    price = Column(Float)
     description = Column(String)
     image_url = Column(String)
-    location = Column(Enum(LocationEnum, name="Location"))
+    location = Column(String)
     published = Column(Boolean)
     rating = Column(Float)
-    genre_id = Column(Integer)
+    genre_id = Column(String)
     created_at = Column(DateTime)
 
     def to_dict(self) -> Dict[str, Any]:

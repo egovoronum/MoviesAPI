@@ -203,19 +203,14 @@ def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
 
 @pytest.fixture(scope="module")
 def db_session() -> Generator[Session, None, None]:
-    """
-    Фикстура, которая создает и возвращает сессию для работы с базой данных
-    После завершения теста сессия автоматически закрывается
-    """
+
     db_session = get_db_session()
     yield db_session
     db_session.close()
 
 @pytest.fixture(scope="function")
 def db_helper(db_session) -> DBHelper:
-    """
-    Фикстура для экземпляра хелпера
-    """
+
     db_helper = DBHelper(db_session)
     return db_helper
 
@@ -225,8 +220,21 @@ def created_test_dbuser(db_helper):
     Фикстура, которая создает тестового пользователя в БД
     и удаляет его после завершения теста
     """
-    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    user = db_helper.create_test_user(DataGenerator.generate_db_user_data())
     yield user
     # Cleanup после теста
     if db_helper.get_user_by_id(user.id):
         db_helper.delete_user(user)
+
+@pytest.fixture(scope="function")
+def db_movie_data(db_helper):
+    """
+    Фикстура, которая создает фильм в БД
+    и удаляет его после завершения теста
+    """
+    movie = db_helper.create_test_movie(DataGenerator.generate_db_movie_data())
+    yield movie
+
+    if db_helper.get_movie_by_id(movie.id):
+        db_helper.delete_movie(movie)
+    

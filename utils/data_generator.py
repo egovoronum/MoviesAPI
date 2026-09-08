@@ -42,14 +42,13 @@ class DataGenerator:
 
         return ''.join(password)
 
-    # invalid password generation
     @staticmethod
     def generate_invalid_password():
         letters = string.punctuation + string.ascii_letters
         return ''.join(random.choices(letters, k=5))
 
     @staticmethod
-    def generate_user_data() -> dict:
+    def generate_db_user_data() -> dict:
         """Генерирует данные для тестового пользователя"""
         from uuid import uuid4
 
@@ -64,3 +63,19 @@ class DataGenerator:
             'banned': False,
             'roles': '{USER}'
         }
+
+    @staticmethod
+    def generate_db_movie_data() -> dict:
+
+        return {
+            'id': random.randint(1, 10000),
+            'name': f"{faker.unique.word()} Kimbo Slice",
+            'price': random.randint(1, 100),
+            'description': f"{faker.word()} generated db data for {faker.word()}",
+            'image_url': f"{faker.image_url()}",
+            'location': "MSK",
+            'published': True,
+            'rating': faker.pyfloat(min_value=1, max_value=5, right_digits=1),
+            'genre_id': 9,
+            'created_at': datetime.now()
+            }
