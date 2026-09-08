@@ -7,6 +7,8 @@ import requests
 import pytest
 from dotenv import load_dotenv
 from faker import Faker
+from sqlalchemy.orm import Session
+from typing import Generator
 
 # ─── модули проекта ────────────────────────────────────────────────────────────
 from utils.data_generator import DataGenerator
@@ -15,6 +17,7 @@ from entities.user import User
 from enums.roles import Roles
 from models.base_models import Movie, Genre
 from db_requester.db_helper import DBHelper
+from db_requester.db_client import get_db_session
 
 # ─── init─────────────────────────────────────────────────────────────
 fake = Faker("ru_RU")
@@ -198,6 +201,16 @@ def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
 
     return movie
 
+@pytest.fixture(scope="module")
+def db_session() -> Generator[Session, None, None]:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
 @pytest.fixture(scope="function")
 def db_helper(db_session) -> DBHelper:
     """
@@ -207,7 +220,7 @@ def db_helper(db_session) -> DBHelper:
     return db_helper
 
 @pytest.fixture(scope="function")
-def created_test_user(db_helper):
+def created_test_dbuser(db_helper):
     """
     Фикстура, которая создает тестового пользователя в БД
     и удаляет его после завершения теста
