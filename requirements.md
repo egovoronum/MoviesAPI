@@ -10,3 +10,4 @@ pydantic
 typing
 psycopg2-binary
 sqlalchemy
+fastapi
