@@ -13,3 +13,4 @@ sqlalchemy
 fastapi
 uvicorn
 allure-pytest
+allure-python-commons
