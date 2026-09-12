@@ -11,3 +11,5 @@ typing
 psycopg2-binary
 sqlalchemy
 fastapi
+uvicorn
+allure-pytest
