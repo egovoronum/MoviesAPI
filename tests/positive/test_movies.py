@@ -1,10 +1,11 @@
-import pytest, random
+import pytest, allure
 from clients.api_manager import ApiManager
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
 from models.base_models import Movie, ApiError
 
+@allure.title("Проверка доступов к DELETE MOVIE")
 @pytest.mark.accesscontrol
 @pytest.mark.regression
 @pytest.mark.parametrize("user, status", [
@@ -71,16 +72,16 @@ class TestParametrizedFilters:
             expected_status=200
         )
 
-
+@pytest.mark.regression
 class TestGetMovies:
 
     def test_get_404movie(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user,
             invalid_movie_id: int
         ):
 
-        response = unauthenticated_api_manager.movies_api.get_movie(
+        response = common_user.api.movies_api.get_movie(
             invalid_movie_id, 
             expected_status=404
         )
