@@ -1,4 +1,4 @@
-import requests, pytest, random
+import requests, pytest, random, allure
 from utils.data_generator import DataGenerator
 from faker import Faker
 from custom_requester.custom_requester import CustomRequester
@@ -256,8 +256,8 @@ def create_test_movie(
 
     yield data
 
-    #teardown
-    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+    with allure.step("Создаём common_user и аутентифицируем"):
+        admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
 
 
 # *grabs movie ID from create_test_movie
@@ -485,7 +485,7 @@ def grab_movie_with_reviews(
 
 #* POSTS a review to an existing movie
 @pytest.fixture(scope="function")
-def generate_review(admin_api_manager):
+def generate_review(super_admin):
     
     data = {
     "rating": 5,
@@ -500,7 +500,7 @@ def generate_review(admin_api_manager):
     params["userId"] = data["userId"]
 
     try:
-        admin_api_manager.movies_api.delete_review(
+        super_admin.api.movies_api.delete_review(
             params=params,
             expected_status=200
         )
