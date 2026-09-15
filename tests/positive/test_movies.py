@@ -6,6 +6,7 @@ fake = Faker("ru_RU")
 from models.base_models import Movie, ApiError
 from entities.user import User
 
+
 @allure.title("Проверка доступов к DELETE MOVIE")
 @pytest.mark.accesscontrol
 @pytest.mark.regression
@@ -18,37 +19,42 @@ def test_access_delete_movie(
     request, super_admin, oneshot_movie_skip_teardown, user, status
     ):
 
-    client = request.getfixturevalue(user)
-    created_movie = oneshot_movie_skip_teardown
+  
+        client = request.getfixturevalue(user)
+        created_movie = oneshot_movie_skip_teardown
 
-    movie_deleted = False
+        movie_deleted = False
 
-    try:
-        delete_response = client.api.movies_api.delete_movie(
-            created_movie.id,
-            expected_status=status
-        )
+        try:
+            with allure.step("делаем запрос на удаление"):
+                delete_response = client.api.movies_api.delete_movie(
+                    created_movie.id,
+                    expected_status=status
+                )
 
-        if status == 200:
-            movie_deleted = True
-            deleted_movie = delete_response.json()
-            assert deleted_movie["id"] == created_movie.id
+            if status == 200:
+                with allure.step("проверяем, что удаленный фильм совпадает с ожидаемым"):
+                    movie_deleted = True
+                    deleted_movie = delete_response.json()
+                    assert deleted_movie["id"] == created_movie.id
 
-        else:
-            e = ApiError(**delete_response.json())
-            assert e.error == "Forbidden"
-            assert e.statusCode == 403
+            else:
+                with allure.step("сверяем ошибку доступа для COMMON_USER с моделью ApiError"):    
+                    e = ApiError(**delete_response.json())
+                    assert e.error == "Forbidden"
+                    assert e.statusCode == 403
 
-    finally:
-        if not movie_deleted:
-            super_admin.api.movies_api.delete_movie(
-                created_movie.id,
-                expected_status=200
-            )
-            
+        finally:
+            with allure.step("ручной teardown"):    
+                if not movie_deleted:
+                    super_admin.api.movies_api.delete_movie(
+                        created_movie.id,
+                        expected_status=200
+                    )
 
+@allure.title("проверяем параметризацию фильтров")            
+@pytest.mark.regression
 class TestParametrizedFilters:
-
     @pytest.mark.parametrize("filter_parameters", [
         {
             "minPrice": 1,
@@ -61,7 +67,6 @@ class TestParametrizedFilters:
             "genreId": 1
         }
     ], ids=["PRICE FILTER", "LOCATION FILTER", "GENRE FILTER"])
-
     def test_parametrized_movie_filters(
             self,
             common_user,
@@ -73,9 +78,10 @@ class TestParametrizedFilters:
             expected_status=200
         )
 
-@allure.epic("Проверяем получение фильмов, создание фильмов, работу фильтров")
+
+@allure.epic("проверяем получение фильмов, создание фильмов, работу фильтров фильмов")
 @pytest.mark.regression
-class TestGetMovies:
+class TestMovies:
 
     @allure.title("проверяем, что GET несуществующего MOVIE_ID возвращает 404")
     @pytest.mark.regression
@@ -94,6 +100,7 @@ class TestGetMovies:
 
         assert "Фильм не найден" in data["message"]
         assert "Not Found" in data["error"]
+
 
     @allure.title("проверяем, что GET существующего movie id возвращает 200")
     @pytest.mark.regression
@@ -121,97 +128,122 @@ class TestGetMovies:
         ):
 
         page_size = valid_filter_params["pageSize"]
-        
-        response = common_user.api.movies_api.get_movies(
-            params=valid_filter_params, 
-            expected_status=200
-        )
 
-        data = response.json()
-        movies = data["movies"]
+        with allure.step("отправляем запрос"):            
+            response = common_user.api.movies_api.get_movies(
+                params=valid_filter_params, 
+                expected_status=200
+            )
 
-        assert len(movies) > 0, f"Returned empty list"
-        assert page_size == data["pageSize"], f"pageSize mismatch"
+            data = response.json()
+            movies = data["movies"]
 
-        movie = Movie(**movies[0])
-        
-        assert movie.name, "name string is empty"
+        with allure.step("проверяем, что не получили пустой список, сверяем page_size"):
+            assert len(movies) > 0, f"Returned empty list"
+            assert page_size == data["pageSize"], f"pageSize mismatch"
+
+        with allure.step("доп проверяем, что фильм в списке не пустышка"):
+            movie = Movie(**movies[0])
+            assert movie.name, "name string is empty"
 
 
+    @allure.title("проверяем работоспособность фильтров цены")
+    @pytest.mark.regression
     def test_get_movies_by_price(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user: User,
             valid_price_filter: dict
         ):
 
-        params = valid_price_filter
-        min_price = params["minPrice"]
-        max_price = params["maxPrice"]
+        with allure.step("отправляем запрос"):
+            params = valid_price_filter
+            min_price = params["minPrice"]
+            max_price = params["maxPrice"]
 
-        response = unauthenticated_api_manager.movies_api.get_movies(
-            params=params, 
-            expected_status=200
-        )
-        
-        data = response.json()
-        movies = data["movies"]
-
-        for movie in movies:
-            assert movie["price"] >= min_price, (
-                f"Price out of specified range. Look at min_price"
+            response = common_user.api.movies_api.get_movies(
+                params=params, 
+                expected_status=200
             )
-            assert movie["price"] <= max_price, (
-                f"Price out of specified range. Look at max_price"
-            )
+            
+            data = response.json()
+            movies = data["movies"]
+
+        with allure.step("проверяем работоспособность сортировки, " \
+        "каждый ассерт отдельно, т.к проще дебажить"):
+            for movie in movies:
+                assert movie["price"] >= min_price, (
+                    f"Price out of specified range. Look at min_price"
+                )
+                assert movie["price"] <= max_price, (
+                    f"Price out of specified range. Look at max_price"
+                )
 
 
+    @allure.title("проверяем работоспособность сортировки фильмов по возрастанию")
+    @pytest.mark.regression
     def test_get_movies_asc(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user: User,
             asc_filter: dict
         ):
-        
-        response = unauthenticated_api_manager.movies_api.get_movies(
-            params=asc_filter,
-            expected_status=200
-        )
 
-        data = response.json()
-        movies = data["movies"]
-        
-        previous = "1900-05-26T11:00:15.900Z"
-        
-        for movie in movies:
+        with allure.step("отправляем запрос с ascending фильтром"):
+            response = common_user.api.movies_api.get_movies(
+                params=asc_filter,
+                expected_status=200
+            )
+
+
+            data = response.json()
+            movies = data["movies"]
+
+        with allure.step("проверяем фильмы на соответствие модели"):
             
-            assert "createdAt" in movie, (f"No createdAt in movie.")
-            current = movie["createdAt"]
-            assert current >= previous, f"createdAt sorting broken: {current} < {previous}"
-            previous = current
+            for movie in movies:
+                Movie(**movie)
+
+            
+        with allure.step("проверяем сортировку"):
+            previous = "1900-05-26T11:00:15.900Z"
+
+            for movie in movies:
+                assert "createdAt" in movie, (f"No createdAt in movie.")
+                current = movie["createdAt"]
+                assert current >= previous, f"createdAt sorting broken: {current} < {previous}"
+                previous = current
 
 
+    @allure.title("проверяем работоспособность сортировки фильмов по убыванию")
+    @pytest.mark.regression
     def test_get_movies_desc(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user: User,
             desc_filter: dict
         ):
         
-        response = unauthenticated_api_manager.movies_api.get_movies(
+        response = common_user.api.movies_api.get_movies(
             params=desc_filter,
             expected_status=200
         )
 
         data = response.json()
         movies = data["movies"]
-        
-        previous = "2500-05-26T11:00:15.900Z"
-        
-        for movie in movies:
+
+        with allure.step("проверяем фильмы на соответствие модели"):
             
-            assert "createdAt" in movie, (f"No createdAt in movie.")
-            current = movie["createdAt"]
-            assert current < iso_now(), f"CreatedAt is > than current time. Double-check."
-            assert current <= previous, f"createdAt sorting broken: {current} > {previous}"
-            previous = current
+            for movie in movies:
+                Movie(**movie)
+
+        with allure.step("проверяем сортировку"):
+            previous = "2500-05-26T11:00:15.900Z"
+            
+            for movie in movies:
+                
+                assert "createdAt" in movie, (f"No createdAt in movie.")
+                current = movie["createdAt"]
+                assert current < iso_now(), f"CreatedAt is > than current time. Double-check."
+                assert current <= previous, f"createdAt sorting broken: {current} > {previous}"
+                previous = current
 
 class TestEditMovies:   
 
