@@ -4,6 +4,7 @@ from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
 from models.base_models import Movie, ApiError
+from entities.user import User
 
 @allure.title("Проверка доступов к DELETE MOVIE")
 @pytest.mark.accesscontrol
@@ -72,12 +73,15 @@ class TestParametrizedFilters:
             expected_status=200
         )
 
+@allure.epic("Проверяем получение фильмов, создание фильмов, работу фильтров")
 @pytest.mark.regression
 class TestGetMovies:
 
+    @allure.title("проверяем, что GET несуществующего MOVIE_ID возвращает 404")
+    @pytest.mark.regression
     def test_get_404movie(
             self,
-            common_user,
+            common_user: User,
             invalid_movie_id: int
         ):
 
@@ -91,65 +95,47 @@ class TestGetMovies:
         assert "Фильм не найден" in data["message"]
         assert "Not Found" in data["error"]
 
-
+    @allure.title("проверяем, что GET существующего movie id возвращает 200")
+    @pytest.mark.regression
     def test_get_200movie(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user: User,
             grab_movie: int
         ):
 
-        response = unauthenticated_api_manager.movies_api.get_movie(
+        response = common_user.api.movies_api.get_movie(
             grab_movie,
             expected_status=200
         )
+        data = Movie(**response.json())
 
-        data = response.json()
-
-        assert "id" in data
-        assert "name" in data
-        assert "price" in data
-        assert "description" in data
-        assert "imageUrl" in data
-        assert "location" in data
-        assert "published" in data
-        assert "rating" in data
-        assert "genreId" in data
-        assert "createdAt" in data
-        assert "reviews" in data
-        assert "genre" in data
+        assert data.id == grab_movie
 
 
+    @allure.title("проверяем, что GET списка фильмов дает 200 и живой список")
+    @pytest.mark.regression
     def test_get_movies(
             self,
-            unauthenticated_api_manager: ApiManager,
+            common_user: User,
             valid_filter_params: dict
         ):
 
         page_size = valid_filter_params["pageSize"]
         
-        response = unauthenticated_api_manager.movies_api.get_movies(
+        response = common_user.api.movies_api.get_movies(
             params=valid_filter_params, 
             expected_status=200
         )
 
         data = response.json()
         movies = data["movies"]
-        
+
         assert len(movies) > 0, f"Returned empty list"
         assert page_size == data["pageSize"], f"pageSize mismatch"
-        assert "id" in movies[0], (
-            f"No ID in movies[0], did you get the correct list in response?"
-        )
-        assert "id" in movies[0], "No ID in movies[0]"
-        assert "genreId" in movies[0], "No genreId in movies[0]"        
-        assert "imageUrl" in movies[0], "No imageUrl in movies[0]"        
-        assert "price" in movies[0], "No price in movies[0]"
-        assert "rating" in movies[0], "No rating in movies[0]"
-        assert "location" in movies[0], "No location in movies[0]"
-        assert "published" in movies[0], "No published in movies[0]"
-        assert "createdAt" in movies[0], "No createdAt in movies[0]"
-        assert "genre" in movies[0], "No genre object in movies[0]"
-        assert "name" in movies[0]["genre"], "No genre.name in movies[0]"
+
+        movie = Movie(**movies[0])
+        
+        assert movie.name, "name string is empty"
 
 
     def test_get_movies_by_price(

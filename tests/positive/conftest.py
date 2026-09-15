@@ -286,13 +286,12 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
     )
 
     data = response.json()
-
     movies = data["movies"]
 
     if len(movies) < 1:
         raise RuntimeError("Couldn't grab as movie list length is less than 1!")
     
-    movie = movies[1]
+    movie = movies[0]
     id = movie["id"]
 
     return id

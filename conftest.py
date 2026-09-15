@@ -81,7 +81,7 @@ def user_session():
         user.close_session()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def common_user(user_session, super_admin: User, create_user_data: dict) -> User:
     new_session = user_session()
 
