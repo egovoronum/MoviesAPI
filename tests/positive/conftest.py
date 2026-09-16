@@ -90,14 +90,6 @@ def admin_login():
     return login_data
 
 
-# *get user by id
-@pytest.fixture(scope="session")
-def get_user():
-
-    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
-
-    return user_id
-
 #* prepare user and return registration payload for SESSION
 @pytest.fixture(scope="session")
 def prepared_user():

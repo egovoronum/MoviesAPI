@@ -52,7 +52,7 @@ def test_access_delete_movie(
                     )
 
 
-@allure.title("проверяем параметризацию фильтров")            
+@allure.title("Проверяем параметризацию фильтров")            
 @pytest.mark.regression
 class TestParametrizedFilters:
     @pytest.mark.parametrize("filter_parameters", [

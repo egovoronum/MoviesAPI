@@ -64,6 +64,15 @@ def create_user_data(oneshot_user) -> dict:
     })
     return updated_data
 
+@pytest.fixture(scope="function")
+def create_admin_user_data(oneshot_user) -> dict:
+    updated_data = oneshot_user.copy()
+    updated_data.update({
+        "roles": ["USER", "ADMIN"],
+        "verified": True,
+        "banned": False
+    })
+    return updated_data
 
 @pytest.fixture
 def user_session():
@@ -97,17 +106,27 @@ def common_user(user_session, super_admin: User, create_user_data: dict) -> User
     return common_user
 
 
-@pytest.fixture
-def admin_user(user_session, super_admin: User, create_user_data: dict) -> User:
+@pytest.fixture(scope="function")
+def admin_user(user_session, super_admin: User, create_admin_user_data: dict) -> User:
     new_session = user_session()
 
     admin_user = User(
-        create_user_data['email'],
-        create_user_data['password'],
+        create_admin_user_data['email'],
+        create_admin_user_data['password'],
         [Roles.ADMIN],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
+    response = super_admin.api.user_api.create_user(create_admin_user_data)
+    data = response.json()
+    new_admin_id = data["id"]
+
+    patch_data = {
+        "roles": ["USER", "ADMIN"],
+        "verified": True,
+        "banned": False
+        }
+
+    super_admin.api.user_api.patch_user(new_admin_id, patch_data)
     admin_user.api.auth_api.authenticate(admin_user.creds)
 
     return admin_user
@@ -237,4 +256,11 @@ def db_movie_data(db_helper):
 
     if db_helper.get_movie_by_id(movie.id):
         db_helper.delete_movie(movie)
-    
+
+
+@pytest.fixture(scope="session")
+def get_user():
+
+    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
+
+    return user_id

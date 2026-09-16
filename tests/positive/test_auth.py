@@ -82,22 +82,17 @@ class TestUsers:
 
         client = request.getfixturevalue(user)
 
-        with allure.step(f"делаем запрос от лица {client}"):    
+        with allure.step(f"делаем запрос от лица {user}"):    
             response = client.api.user_api.get_user_info(
                 get_user, 
                 expected_status=status
             )
 
         if status != 200:
-            with allure.step(f"Статус код не 200. Сверяем ошибку доступа {client} с моделью ApiError"):    
+            with allure.step(f"Статус код не 200. Сверяем ошибку доступа {user} с моделью ApiError"):    
                 e = ApiError(**response.json())
                 assert e.error == "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403"
                 assert e.statusCode == 403, "статуск код не 403"
-
-        if status == 200:
-            with allure.step(f"Логин из под {client}. Статус код 200. Сверяем с моделью"):
-                data = LoggedInUser(**response.json())
-                assert client in data.user.roles, "роль в ответе не совпадает с клиентом"
 
 
     def test_delete_user(

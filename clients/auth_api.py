@@ -32,7 +32,8 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             endpoint=f"/user/{user_id}",
             expected_status=expected_status
         )
-        
+
+
     def authenticate(self, user_creds:list):
         
         login_data = {
@@ -48,4 +49,5 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
         token = response["accessToken"]
         
         self._update_session_headers({"authorization": "Bearer " + token})
+
         
