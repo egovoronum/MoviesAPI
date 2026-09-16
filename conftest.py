@@ -4,7 +4,7 @@ import random
 
 # ─── доп библиотеки ────────────────────────────────────────────────────────
 import requests
-import pytest
+import pytest, allure
 from dotenv import load_dotenv
 from faker import Faker
 from sqlalchemy.orm import Session
@@ -91,7 +91,12 @@ def user_session():
 
 
 @pytest.fixture(scope="function")
-def common_user(user_session, super_admin: User, create_user_data: dict) -> User:
+def common_user(
+    user_session,
+    super_admin: User,
+    create_user_data: dict
+    ) -> Generator[User, None, None]:
+
     new_session = user_session()
 
     common_user = User(
@@ -100,14 +105,28 @@ def common_user(user_session, super_admin: User, create_user_data: dict) -> User
         [Roles.USER],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
+    response = super_admin.api.user_api.create_user(create_user_data)
+
+    data = response.json()
+    new_common_user_id = data["id"]
+
     common_user.api.auth_api.authenticate(common_user.creds)
 
-    return common_user
+    yield common_user
+
+    with allure.step("tearing down common_user"):
+        super_admin.api.user_api.delete_user(
+            new_common_user_id,
+            expected_status=200
+            )
 
 
 @pytest.fixture(scope="function")
-def admin_user(user_session, super_admin: User, create_admin_user_data: dict) -> User:
+def admin_user(
+    user_session,
+    super_admin: User,
+    create_admin_user_data: dict
+) -> Generator[User, None, None]:
     new_session = user_session()
 
     admin_user = User(
@@ -116,20 +135,32 @@ def admin_user(user_session, super_admin: User, create_admin_user_data: dict) ->
         [Roles.ADMIN],
         new_session)
 
+    
     response = super_admin.api.user_api.create_user(create_admin_user_data)
     data = response.json()
     new_admin_id = data["id"]
 
-    patch_data = {
-        "roles": ["USER", "ADMIN"],
-        "verified": True,
-        "banned": False
-        }
+    with allure.step("""
+        создаем patch_data и делаем PATCH юзера
+        т.к. невозможно указать ROLES: ["ADMIN"] при создании!
+        """):   
 
-    super_admin.api.user_api.patch_user(new_admin_id, patch_data)
-    admin_user.api.auth_api.authenticate(admin_user.creds)
+        patch_data = {
+            "roles": ["USER", "ADMIN"],
+            "verified": True,
+            "banned": False
+            }
 
-    return admin_user
+        super_admin.api.user_api.patch_user(new_admin_id, patch_data)
+        admin_user.api.auth_api.authenticate(admin_user.creds)
+
+    yield admin_user
+
+    with allure.step("tearing down admin_user"):
+        super_admin.api.user_api.delete_user(
+            new_admin_id,
+            expected_status=200
+            )
 
 
 @pytest.fixture

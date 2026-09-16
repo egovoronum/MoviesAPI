@@ -4,12 +4,18 @@ from models.base_models import ApiError
 @allure.epic("Негативная проверка AUTH API")
 class TestNegativeAuthAPI:
     @allure.title("Проверка доступа к информации о юзере: ожидается отказ")
+    @allure.description("""
+    проверяем, что admin_user имеет доступ к просмотру /user по ID 
+    проверяем, что common_user не имеет доступа к просмотру /user по ID
+    проверяем, что сообщение об ошибке возвращает 403 и Forbidden
+    """)
     @pytest.mark.accesscontrol
     @pytest.mark.regression
     @pytest.mark.parametrize("user, status", [
+    ("super_admin", 200),
     ("admin_user", 200),
     ("common_user", 403),
-], ids=["ADMIN USER", "COMMON USER"])
+], ids=["SUPER ADMIN", "ADMIN USER", "COMMON USER"])
     def test_get_user_info_access_denied(
             self,
             request,
