@@ -3,6 +3,7 @@ from typing import Optional
 from enums.roles import Roles
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 class ApiError(BaseModel):
     message: str
@@ -17,6 +18,21 @@ class TestUser(BaseModel):
     roles: list[Roles]
     verified: Optional[bool] = None
     banned: Optional[bool] = None
+
+# POST /register **201 response**
+class CreatedUser(BaseModel):
+    id: str
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    roles: list[Roles]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class LoggedInUser(BaseModel):
+    user: CreatedUser
+    accessToken: str
+    refreshToken: UUID
+    expiresIn: int
 
 class Location(str, Enum):
     MSK = "MSK"

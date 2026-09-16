@@ -1,9 +1,8 @@
 import pytest, allure
-from clients.api_manager import ApiManager
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
-from models.base_models import Movie, ApiError, Genre, Review, ReviewUser
+from models.base_models import Movie, ApiError, Genre, Review
 from entities.user import User
 
 
