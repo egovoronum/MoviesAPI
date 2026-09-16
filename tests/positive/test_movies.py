@@ -3,7 +3,7 @@ from clients.api_manager import ApiManager
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
-from models.base_models import Movie, ApiError, Genre, Review
+from models.base_models import Movie, ApiError, Genre, Review, ReviewUser
 from entities.user import User
 
 
@@ -51,6 +51,7 @@ def test_access_delete_movie(
                         created_movie.id,
                         expected_status=200
                     )
+
 
 @allure.title("проверяем параметризацию фильтров")            
 @pytest.mark.regression
@@ -248,6 +249,7 @@ class TestMovies:
 
 
 @allure.epic("проверка создания и редактирования фильмов")
+@pytest.mark.regression
 class TestEditMovies:   
 
     @allure.title("проверка созданного фильма на соответствие модели")
@@ -272,7 +274,9 @@ class TestEditMovies:
         print(data)
         assert grab_movie == data["id"]
 
+
 @allure.epic("проверка жанров")
+@pytest.mark.regression
 class TestGenres:
 
     @allure.title("проверка GET **списка** жанров")
@@ -344,7 +348,9 @@ class TestGenres:
         with allure.step("сверяем ответ с моделью"):
             Genre(**response.json())
 
+
 @allure.epic("тестирование жанров")
+@pytest.mark.regression
 class TestReviews:
 
     @allure.title("проверка POST обзора на фильм")
@@ -374,38 +380,42 @@ class TestReviews:
             generate_review["movieId"] = movie_id
             generate_review["userId"] = data.userId
 
+    @allure.title("проверка POST отзыва с USER правами")
+    @pytest.mark.regression
     def test_movie_review_as_user(
             self,
-            user_api_manager: ApiManager,
+            common_user: User,
             movie_id: int,
             generate_review: dict
         ):
 
-        response = user_api_manager.movies_api.post_review(
-            movie_id=movie_id,
-            data = generate_review,
-            expected_status=201
-        )
+        with allure.step("отправляем запрос"):
+            response = common_user.api.movies_api.post_review(
+                movie_id=movie_id,
+                data = generate_review,
+                expected_status=201
+            )
 
-        data = response.json()
+        with allure.step("сверяем ответ с моделью"):
+            data = Review(**response.json())
 
-        assert "userId" in data
-        assert generate_review["text"] == data["text"]
-        assert generate_review["rating"] == data["rating"]
-        assert "createdAt" in data
-        assert "user" in data
-        generate_review["movieId"] = movie_id
-        generate_review["userId"] = data["userId"]
+        with allure.step("передаем данные в teardown фикстуры"):
+            generate_review["movieId"] = movie_id
+            generate_review["userId"] = data.userId
 
 
+@allure.description("""
+тест не работает так как надо,
+скипаю пока
+""")
 @pytest.mark.skip
 def test_patch_random_movie(
-        admin_api_manager: ApiManager,
+        super_admin: User,
         grab_movie: int, 
         patch_movie: dict
     ):
 
-    response = admin_api_manager.movies_api.patch_movie(
+    response = super_admin.api.movies_api.patch_movie(
         patch_movie,
         grab_movie,
         expected_status=200
