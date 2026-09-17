@@ -251,7 +251,7 @@ def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
 
     return movie
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
 
     db_session = get_db_session()

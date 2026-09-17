@@ -4,6 +4,7 @@ from faker import Faker
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
+from models.base_models import Movie
 
 
 # *API classes import
@@ -193,7 +194,7 @@ def test_user(admin_api_manager: ApiManager):
 
 # user deletion
 @pytest.fixture(scope="function")
-def test_user_deletion(unauthenticated_api_manager: ApiManager,
+def oneshot_user_id(unauthenticated_api_manager: ApiManager,
                        oneshot_user: dict
                        ):
 
@@ -233,7 +234,7 @@ def new_movie_data(unauthenticated_api_manager):
 
     return data
 
-#* CREATES NEW MOVIE & tears it down
+
 @pytest.fixture(scope="function")
 def create_test_movie(
     admin_api_manager: ApiManager,
@@ -248,11 +249,25 @@ def create_test_movie(
 
     yield data
 
-    with allure.step("Создаём common_user и аутентифицируем"):
+    with allure.step("Teardown"):
         admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
 
 
-# *grabs movie ID from create_test_movie
+@pytest.fixture(scope="function")
+def create_test_movie_no_teardown(
+    super_admin,
+    new_movie_data: dict) -> Movie:
+
+    response = super_admin.api.movies_api.create_movie(
+        new_movie_data,
+        expected_status=201
+    )
+
+    data = response.json()
+
+    return Movie(**data)
+
+
 @pytest.fixture(scope="function")
 def movie_id(create_test_movie):
 
@@ -260,7 +275,7 @@ def movie_id(create_test_movie):
 
     return id
 
-#* grabs invalid movie ID
+
 @pytest.fixture(scope="function")
 def invalid_movie_id():
 

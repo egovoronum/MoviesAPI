@@ -3,6 +3,7 @@ from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
 from models.base_models import Movie, ApiError, Genre, Review
+from models.db_movie import MovieDBModel
 from entities.user import User
 
 
@@ -50,33 +51,6 @@ def test_access_delete_movie(
                         created_movie.id,
                         expected_status=200
                     )
-
-
-@allure.title("Проверяем параметризацию фильтров")            
-@pytest.mark.regression
-class TestParametrizedFilters:
-    @pytest.mark.parametrize("filter_parameters", [
-        {
-            "minPrice": 1,
-            "maxPrice": 1000,
-        },
-        {
-            "locations": "MSK"
-        },
-        {
-            "genreId": 1
-        }
-    ], ids=["PRICE FILTER", "LOCATION FILTER", "GENRE FILTER"])
-    def test_parametrized_movie_filters(
-            self,
-            common_user,
-            filter_parameters
-        ):
-
-        response = common_user.api.movies_api.get_movies(
-            params=filter_parameters,
-            expected_status=200
-        )
 
 
 @allure.epic("проверяем получение фильмов, создание фильмов, работу фильтров фильмов")
@@ -247,6 +221,33 @@ class TestMovies:
                 previous = current
 
 
+@allure.title("Проверяем параметризацию фильтров")            
+@pytest.mark.regression
+class TestParametrizedFilters:
+    @pytest.mark.parametrize("filter_parameters", [
+        {
+            "minPrice": 1,
+            "maxPrice": 1000,
+        },
+        {
+            "locations": "MSK"
+        },
+        {
+            "genreId": 1
+        }
+    ], ids=["PRICE FILTER", "LOCATION FILTER", "GENRE FILTER"])
+    def test_parametrized_movie_filters(
+            self,
+            common_user,
+            filter_parameters
+        ):
+
+        common_user.api.movies_api.get_movies(
+            params=filter_parameters,
+            expected_status=200
+        )
+
+
 @allure.epic("проверка создания и редактирования фильмов")
 @pytest.mark.regression
 class TestEditMovies:   
@@ -259,19 +260,33 @@ class TestEditMovies:
 
     @allure.title("проверка DELETE MOVIE")
     @pytest.mark.regression
-    def test_delete_random_movie(
+    def test_delete_movie(
             self,
+            db_helper,
             super_admin: User,
-            grab_movie: int
+            create_test_movie_no_teardown: Movie
         ):
 
-        response = super_admin.api.movies_api.delete_movie(
-            grab_movie,
-            expected_status=200
-        )
-        data = response.json()
-        print(data)
-        assert grab_movie == data["id"]
+        with allure.step("Вынимаем ID фильма"):
+            movie_id = create_test_movie_no_teardown.id
+
+        with allure.step("Отправляем API запрос на удаление"):
+            response = super_admin.api.movies_api.delete_movie(
+                movie_id,
+                expected_status=200
+            )
+
+        with allure.step("Сверяем, что API вернул нужный ID после DELETE"):
+            data = response.json()
+            assert movie_id == data["id"]
+
+        with allure.step("Отправляем запрос в базу по удаленному API ID"):  
+            db_response = db_helper.get_movie_by_id(data["id"])
+            assert db_response is None, "DB_HELPER: movie не удален в базе"
+
+        # print(f"ID от API: {data["id"]}")
+        # print(f"ОТВЕТ ОТ БАЗЫ: {db_response}")
+        # print(create_test_movie_no_teardown)
 
 
 @allure.epic("проверка жанров")

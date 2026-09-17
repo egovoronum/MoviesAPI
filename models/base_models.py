@@ -19,7 +19,6 @@ class TestUser(BaseModel):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
-# POST /register **201 response**
 class CreatedUser(BaseModel):
     id: str
     email: str = Field(..., min_length=3)
