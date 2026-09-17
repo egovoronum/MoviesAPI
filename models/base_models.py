@@ -6,7 +6,7 @@ from enum import Enum
 from uuid import UUID
 
 class ApiError(BaseModel):
-    message: str
+    message: str | list[str]
     error: str
     statusCode: int
 
@@ -50,6 +50,15 @@ class Review(BaseModel):
     rating: int = Field(..., ge=0, le=5)
     createdAt: datetime
     user: ReviewUser
+
+class CreateMovieData(BaseModel):
+    name: str
+    description: str
+    genreId: int
+    imageUrl: str
+    price: int
+    location: Location
+    published: bool
 
 class Movie(BaseModel):
     id: int

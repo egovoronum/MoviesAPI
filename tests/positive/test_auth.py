@@ -2,11 +2,16 @@ import pytest, allure
 from clients.api_manager import ApiManager 
 from models.base_models import CreatedUser, LoggedInUser, ApiError
 from uuid import UUID
+from entities.user import User
 
 @allure.epic("Позитивные проверки UsersAPI")
 class TestUsers:
 
-    @allure.title("Проверяем, что юзеры создаются")
+    @allure.title("Создание пользователя")
+    @allure.description("""
+        проверяет корректность создания пользователя супер-админом
+        валидирует поля id, email, fullName, verified в ответе CreatedUser
+        """)
     @pytest.mark.regression
     def test_create_user(self, super_admin, create_user_data: dict):
 
@@ -23,7 +28,11 @@ class TestUsers:
             assert validated_response.verified is True, "поле verified не True"
 
 
-    @allure.title("Проверяем, что поиск юзера по локатору работает")
+    @allure.title("Получение информации о пользователе по идентификатору и email")
+    @allure.description("""
+        проверяет консистентность ответов /user/{id} и /user/{email}
+        подтверждает совпадение id, email, fullName и verified между обоими запросами
+        """)
     @pytest.mark.regression
     def test_get_user_by_locator(self, super_admin, create_user_data: dict):
 
@@ -42,7 +51,12 @@ class TestUsers:
             assert response_by_id.get('verified') is True
 
 
-    @allure.title("Проверка регистрации нового пользователя")
+    @allure.title("Регистрация нового пользователя")
+    @allure.description("""
+        проверяет успешную регистрацию без авторизации
+        валидирует возвращение id, email, fullName через CreatedUser
+        передаёт id в фикстуру для teardown
+        """)
     @pytest.mark.regression
     def test_register_user(
             self,
@@ -63,7 +77,11 @@ class TestUsers:
         with allure.step("Передаем id в teardown фикстуры"):
             test_user["id"] = data.id
 
-    @allure.title("Проверка логина супер админа")
+    @allure.title("Логин супер-админа")
+    @allure.description("""
+        проверяет успешный вход с ролью SUPER_ADMIN
+        валидирует поля user.email и наличие роли SUPER_ADMIN в ответе
+        """)
     @pytest.mark.regression
     def test_admin_login(
             self,
@@ -84,7 +102,11 @@ class TestUsers:
         assert "SUPER_ADMIN" in data.user.roles, "user не имеет прав SUPER_ADMIN"
 
 
-    @allure.title("Проверка получения информации о юзере")
+    @allure.title("Получение информации о пользователе по id")
+    @allure.description("""
+        проверяет доступ к /user/{id} для admin_user (200 OK)
+        проверяет отказ common_user с ошибкой 403 Forbidden и корректное ApiError сообщение
+        """)
     @pytest.mark.accesscontrol
     @pytest.mark.regression
     @pytest.mark.parametrize("user, status", [
@@ -94,7 +116,7 @@ class TestUsers:
     def test_get_user_info(
             self,
             request,
-            user,
+            user: User,
             status,
             get_user: UUID
         ):
@@ -114,12 +136,16 @@ class TestUsers:
                 assert e.statusCode == 403, "статуск код не 403"
 
 
-    @allure.title("Проверка удаления юзера в PostgresSQL")
+    @allure.title("Удаление пользователя через API (сверка с Postgres)")
+    @allure.description("""
+        проверяет удаление пользователя супер-админом по id
+        подтверждает удаление в базе (PostgreSQL возвращает None)
+        """)
     @pytest.mark.regression
     def test_delete_user(
             self,
             db_helper,
-            super_admin,
+            super_admin: User,
             oneshot_user_id: UUID):
 
         with allure.step("""

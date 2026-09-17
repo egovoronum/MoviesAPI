@@ -1,5 +1,6 @@
 import pytest, allure
 from models.base_models import ApiError
+from entities.user import User
 
 @allure.epic("Негативная проверка AUTH API")
 class TestNegativeAuthAPI:
@@ -19,8 +20,8 @@ class TestNegativeAuthAPI:
     def test_get_user_info_access_denied(
             self,
             request,
-            user,
-            status,
+            user: User,
+            status: int,
             get_user: int
         ):
 
