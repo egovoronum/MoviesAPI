@@ -1,4 +1,5 @@
 from clients.api_manager import ApiManager
+from models.base_models import ApiError
 
 class TestMovieFilters:
 
@@ -99,6 +100,6 @@ class TestEditMovies:
             expected_status=403
         )
 
-        data = response.json()
+        error_message = ApiError(**response.json())
 
-        assert "Forbidden" in data["error"]
+        assert "Forbidden" in error_message.error

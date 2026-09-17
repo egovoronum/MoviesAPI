@@ -84,7 +84,7 @@ class TestUsers:
         assert "SUPER_ADMIN" in data.user.roles, "user не имеет прав SUPER_ADMIN"
 
 
-    @allure.title("проверка получения информации о юзере")
+    @allure.title("Проверка получения информации о юзере")
     @pytest.mark.accesscontrol
     @pytest.mark.regression
     @pytest.mark.parametrize("user, status", [
@@ -114,7 +114,7 @@ class TestUsers:
                 assert e.statusCode == 403, "статуск код не 403"
 
 
-    @allure.title("Проверяем удаление юзера в PostgresSQL")
+    @allure.title("Проверка удаления юзера в PostgresSQL")
     @pytest.mark.regression
     def test_delete_user(
             self,

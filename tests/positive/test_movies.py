@@ -53,11 +53,11 @@ def test_access_delete_movie(
                     )
 
 
-@allure.epic("проверяем получение фильмов, создание фильмов, работу фильтров фильмов")
+@allure.epic("Проверяем получение фильмов, создание фильмов, работу фильтров фильмов")
 @pytest.mark.regression
 class TestMovies:
 
-    @allure.title("проверяем, что GET несуществующего MOVIE_ID возвращает 404")
+    @allure.title("Проверяем, что GET несуществующего MOVIE_ID возвращает 404")
     @pytest.mark.regression
     def test_get_404movie(
             self,
@@ -76,7 +76,7 @@ class TestMovies:
         assert "Not Found" in data["error"]
 
 
-    @allure.title("проверяем, что GET существующего movie id возвращает 200")
+    @allure.title("Проверяем, что GET существующего movie id возвращает 200")
     @pytest.mark.regression
     def test_get_200movie(
             self,
@@ -93,7 +93,7 @@ class TestMovies:
         assert data.id == grab_movie
 
 
-    @allure.title("проверяем, что GET списка фильмов дает 200 и живой список")
+    @allure.title("Проверяем, что GET списка фильмов дает 200 и живой список")
     @pytest.mark.regression
     def test_get_movies(
             self,
@@ -121,7 +121,7 @@ class TestMovies:
             assert movie.name, "name string is empty"
 
 
-    @allure.title("проверяем работоспособность фильтров цены")
+    @allure.title("Проверяем работоспособность фильтров цены")
     @pytest.mark.regression
     def test_get_movies_by_price(
             self,
@@ -153,7 +153,7 @@ class TestMovies:
                 )
 
 
-    @allure.title("проверяем работоспособность сортировки фильмов по возрастанию")
+    @allure.title("Проверяем работоспособность сортировки фильмов по возрастанию")
     @pytest.mark.regression
     def test_get_movies_asc(
             self,
@@ -248,7 +248,7 @@ class TestParametrizedFilters:
         )
 
 
-@allure.epic("проверка создания и редактирования фильмов")
+@allure.epic("Проверка создания и редактирования фильмов")
 @pytest.mark.regression
 class TestEditMovies:   
 
@@ -289,7 +289,7 @@ class TestEditMovies:
         # print(create_test_movie_no_teardown)
 
 
-@allure.epic("проверка жанров")
+@allure.epic("Проверка жанров")
 @pytest.mark.regression
 class TestGenres:
 
@@ -363,11 +363,11 @@ class TestGenres:
             Genre(**response.json())
 
 
-@allure.epic("тестирование жанров")
+@allure.epic("Проверка обзоров")
 @pytest.mark.regression
 class TestReviews:
 
-    @allure.title("проверка POST обзора на фильм")
+    @allure.title("Проверка POST обзора на фильм")
     @pytest.mark.regression
     def test_post_movie_review_as_admin(
             self,
@@ -376,25 +376,25 @@ class TestReviews:
             generate_review: dict
         ):
 
-        with allure.step("запрос на создание со словарем из фикстуры"):    
+        with allure.step("Запрос на создание со словарем из фикстуры"):    
             response = admin_user.api.movies_api.post_review(
                 movie_id = movie_id,
                 data = generate_review,
                 expected_status=201
             )
 
-        with allure.step("сверка с моделью"):    
+        with allure.step("Сверка с моделью"):    
             data = Review(**response.json())
 
-        with allure.step("сверяем текст и рейтинг созданного обзора с полученным словарем от фикстуры"):
+        with allure.step("Сверяем текст и рейтинг созданного обзора с полученным словарем от фикстуры"):
             assert generate_review["text"] == data.text
             assert generate_review["rating"] == data.rating
 
-        with allure.step("передача параметров созданного обзора в teardown фикстуры"):    
+        with allure.step("Передача параметров созданного обзора в teardown фикстуры"):    
             generate_review["movieId"] = movie_id
             generate_review["userId"] = data.userId
 
-    @allure.title("проверка POST отзыва с USER правами")
+    @allure.title("Проверка размещения отзыва с USER правами")
     @pytest.mark.regression
     def test_movie_review_as_user(
             self,
