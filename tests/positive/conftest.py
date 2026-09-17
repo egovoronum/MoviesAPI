@@ -192,7 +192,7 @@ def test_user(admin_api_manager: ApiManager):
             expected_status=200
         )
 
-# user deletion
+
 @pytest.fixture(scope="function")
 def oneshot_user_id(unauthenticated_api_manager: ApiManager,
                        oneshot_user: dict
@@ -208,12 +208,10 @@ def oneshot_user_id(unauthenticated_api_manager: ApiManager,
 
     return id
 
-    
-#* PREPARES NEW MOVIE DATA
+
 @pytest.fixture(scope="function")
 def new_movie_data(unauthenticated_api_manager):
 
-    #grab existing random genre first to avoid error
     response = unauthenticated_api_manager.movies_api.get_genres(
         expected_status=200
     )
@@ -277,14 +275,6 @@ def movie_id(create_test_movie):
 
 
 @pytest.fixture(scope="function")
-def invalid_movie_id():
-
-    id = random.randint(500000, 600000)
-
-    return id
-
-# *finds an existing movie and grabs ID
-@pytest.fixture(scope="function")
 def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
     response = unauthenticated_api_manager.movies_api.get_movies(
@@ -303,6 +293,7 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
     return id
 
+
 @pytest.fixture(scope="session")
 def filter_parameters():
 
@@ -317,7 +308,7 @@ def filter_parameters():
 
     return parameters
 
-# *prepares general valid filter parameters for /movies
+
 @pytest.fixture(scope="function")
 def valid_filter_params():
 

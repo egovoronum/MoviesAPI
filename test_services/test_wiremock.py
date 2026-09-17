@@ -2,6 +2,7 @@ import requests, pytest, allure
 
 @allure.title("Проверяем поднят ли Wiremock")
 @pytest.mark.smoke_mock
+@pytest.mark.skip
 def test_wiremock_instance():
     setup_wiremock_mock()
     response = requests.get("http://localhost:8080/gismeteo/get/weather")

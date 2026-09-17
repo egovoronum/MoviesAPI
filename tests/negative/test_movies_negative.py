@@ -117,6 +117,28 @@ class TestMovieFilters:
 @allure.epic("Негативные проверки Movies API")
 class TestEditMovies:
 
+    @allure.title("GET несуществующий фильм (404)")
+    @allure.description("""
+        проверяет GET несуществующего фильма по ID
+        ожидается статус 404
+        сообщение содержит "Фильм не найден" и "Not Found"
+        """)
+    @pytest.mark.regression
+    def test_get_404movie(
+            self,
+            common_user: User,
+            invalid_movie_id: int
+        ):
+
+        response = common_user.api.movies_api.get_movie(
+            invalid_movie_id, 
+            expected_status=404
+        )
+
+        e = ApiError(**response.json())
+        assert "Фильм не найден" in e.message
+        assert "Not Found" in e.error
+
     @allure.title("Проверка создания фильма с невалидными данными (ожидается 400)")
     @allure.description("""
     проверяет, что API возвращает ошибку 400 при создании фильма с некорректными данными

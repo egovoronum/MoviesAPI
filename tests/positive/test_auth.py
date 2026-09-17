@@ -152,7 +152,7 @@ class TestUsers:
         Делаем запрос на удаление id, полученного от фикстуры oneshot_user_id через API
         """):    
             super_admin.api.user_api.delete_user(
-                oneshot_user_id,
+                str(oneshot_user_id),
                 expected_status=200
             )
 

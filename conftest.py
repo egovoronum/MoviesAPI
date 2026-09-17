@@ -295,3 +295,11 @@ def get_user():
     user_id = "734964ec-4d6a-4789-839f-75797141e73e"
 
     return user_id
+
+
+@pytest.fixture(scope="function")
+def invalid_movie_id():
+
+    id = random.randint(500000, 600000)
+
+    return id
