@@ -4,7 +4,7 @@ import random
 
 # ─── доп библиотеки ────────────────────────────────────────────────────────
 import requests
-import pytest
+import pytest, allure
 from dotenv import load_dotenv
 from faker import Faker
 from sqlalchemy.orm import Session
@@ -64,6 +64,15 @@ def create_user_data(oneshot_user) -> dict:
     })
     return updated_data
 
+@pytest.fixture(scope="function")
+def create_admin_user_data(oneshot_user) -> dict:
+    updated_data = oneshot_user.copy()
+    updated_data.update({
+        "roles": ["USER", "ADMIN"],
+        "verified": True,
+        "banned": False
+    })
+    return updated_data
 
 @pytest.fixture
 def user_session():
@@ -81,8 +90,13 @@ def user_session():
         user.close_session()
 
 
-@pytest.fixture
-def common_user(user_session, super_admin: User, create_user_data: dict) -> User:
+@pytest.fixture(scope="function")
+def common_user(
+    user_session,
+    super_admin: User,
+    create_user_data: dict
+    ) -> Generator[User, None, None]:
+
     new_session = user_session()
 
     common_user = User(
@@ -91,26 +105,62 @@ def common_user(user_session, super_admin: User, create_user_data: dict) -> User
         [Roles.USER],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
+    response = super_admin.api.user_api.create_user(create_user_data)
+
+    data = response.json()
+    new_common_user_id = data["id"]
+
     common_user.api.auth_api.authenticate(common_user.creds)
 
-    return common_user
+    yield common_user
+
+    with allure.step("tearing down common_user"):
+        super_admin.api.user_api.delete_user(
+            new_common_user_id,
+            expected_status=200
+            )
 
 
-@pytest.fixture
-def admin_user(user_session, super_admin: User, create_user_data: dict) -> User:
+@pytest.fixture(scope="function")
+def admin_user(
+    user_session,
+    super_admin: User,
+    create_admin_user_data: dict
+) -> Generator[User, None, None]:
     new_session = user_session()
 
     admin_user = User(
-        create_user_data['email'],
-        create_user_data['password'],
+        create_admin_user_data['email'],
+        create_admin_user_data['password'],
         [Roles.ADMIN],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
-    admin_user.api.auth_api.authenticate(admin_user.creds)
+    
+    response = super_admin.api.user_api.create_user(create_admin_user_data)
+    data = response.json()
+    new_admin_id = data["id"]
 
-    return admin_user
+    with allure.step("""
+        создаем patch_data и делаем PATCH юзера
+        т.к. невозможно указать ROLES: ["ADMIN"] при создании!
+        """):   
+
+        patch_data = {
+            "roles": ["USER", "ADMIN"],
+            "verified": True,
+            "banned": False
+            }
+
+        super_admin.api.user_api.patch_user(new_admin_id, patch_data)
+        admin_user.api.auth_api.authenticate(admin_user.creds)
+
+    yield admin_user
+
+    with allure.step("tearing down admin_user"):
+        super_admin.api.user_api.delete_user(
+            new_admin_id,
+            expected_status=200
+            )
 
 
 @pytest.fixture
@@ -201,7 +251,7 @@ def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
 
     return movie
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
 
     db_session = get_db_session()
@@ -237,4 +287,19 @@ def db_movie_data(db_helper):
 
     if db_helper.get_movie_by_id(movie.id):
         db_helper.delete_movie(movie)
-    
+
+
+@pytest.fixture(scope="session")
+def get_user():
+
+    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
+
+    return user_id
+
+
+@pytest.fixture(scope="function")
+def invalid_movie_id():
+
+    id = random.randint(500000, 600000)
+
+    return id

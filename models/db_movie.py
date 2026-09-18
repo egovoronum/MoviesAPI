@@ -1,4 +1,3 @@
-import enum
 from sqlalchemy import Column, String, Boolean, DateTime, Integer, Enum, Float
 from sqlalchemy.orm import declarative_base
 from typing import Dict, Any

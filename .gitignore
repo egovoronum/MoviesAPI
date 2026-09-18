@@ -10,3 +10,8 @@ __pycache__/
 *.csv
 *.env
 .env
+.allure-report
+.allure-results
+allure-report
+allure-results
+sandbox

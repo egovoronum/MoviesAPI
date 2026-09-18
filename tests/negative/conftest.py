@@ -47,7 +47,7 @@ def admin_api_manager():
     
     http_session.close()
 
-#? нигде не юзаю... managing API 
+
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
@@ -63,14 +63,12 @@ def unauthenticated_api_manager():
     http_session.close()
     
 
-# login API
 @pytest.fixture(scope="session")
 def api_login(session):
 
     return AuthAPI(session)
 
 
-# !prepares an invalid price filter minPrice>maxPrice
 @pytest.fixture(scope="session")
 def invalid_price_filter_reversed():
     
@@ -87,7 +85,7 @@ def invalid_price_filter_reversed():
 
     return params
 
-# !prepares an invalid price filter minPrice is negative
+
 @pytest.fixture(scope="session")
 def invalid_price_filter_negative_min():
     
@@ -104,7 +102,7 @@ def invalid_price_filter_negative_min():
 
     return params
 
-#! prepares an invalid page value in filter
+
 @pytest.fixture(scope="session")
 def invalid_page():
 
@@ -121,7 +119,7 @@ def invalid_page():
 
     return params
 
-#! prepares an invalid location field in filter
+
 @pytest.fixture(scope="session")
 def invalid_location():
 
