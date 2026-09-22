@@ -101,7 +101,8 @@ class TestMovieFilters:
             invalid_location: dict       
         ):
 
-        with allure.step("Делаем запрос без аутентификации"):            response = unauthenticated_api_manager.movies_api.get_movies(
+        with allure.step("Делаем запрос без аутентификации"):            
+            response = unauthenticated_api_manager.movies_api.get_movies(
                 invalid_location,
                 expected_status=400
             )
