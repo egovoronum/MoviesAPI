@@ -1,6 +1,7 @@
 import constants
 import custom_requester.custom_requester
 import requests
+import allure
 
 class AuthAPI(custom_requester.custom_requester.CustomRequester):
     
@@ -9,7 +10,8 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             session=session,
             base_url="https://auth.dev-cinescope.coconutqa.ru"
         )
-    
+
+    @allure.step("Регистрация нового пользователя")
     def register_user(self, user_data:dict, expected_status=201):
         return self.send_request(
             method="POST",
@@ -17,7 +19,8 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             data=user_data,
             expected_status=expected_status
         )
-        
+
+    @allure.step("Авторизация пользователя")
     def login_user(self, login_data:dict, expected_status=200):
         return self.send_request(
             method="POST",
@@ -25,7 +28,8 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             data=login_data,
             expected_status=expected_status
         )
-    
+
+    @allure.step("Удалить пользователя по ID")
     def delete_user(self, user_id:str, expected_status=200):
         return self.send_request(
             method="DELETE",
@@ -33,7 +37,7 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
             expected_status=expected_status
         )
 
-
+    @allure.step("Аутентификация и получение токена")
     def authenticate(self, user_creds:list):
         
         login_data = {
