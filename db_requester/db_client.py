@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from resources.credits import credits
+import allure
 
 USERNAME = credits.MOVIES_DB_USER
 PASSWORD = credits.MOVIES_DB_PASSWORD
@@ -15,6 +16,6 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+allure.step("Создать новую сессию соединения с БД")
 def get_db_session():
-    """Создает новую сессию БД"""
     return SessionLocal()

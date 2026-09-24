@@ -3,9 +3,10 @@ from typing import Optional
 from enums.roles import Roles
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 class ApiError(BaseModel):
-    message: str
+    message: str | list[str]
     error: str
     statusCode: int
 
@@ -17,6 +18,20 @@ class TestUser(BaseModel):
     roles: list[Roles]
     verified: Optional[bool] = None
     banned: Optional[bool] = None
+
+class CreatedUser(BaseModel):
+    id: str
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    roles: list[Roles]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class LoggedInUser(BaseModel):
+    user: CreatedUser
+    accessToken: str
+    refreshToken: UUID
+    expiresIn: int
 
 class Location(str, Enum):
     MSK = "MSK"
@@ -35,6 +50,15 @@ class Review(BaseModel):
     rating: int = Field(..., ge=0, le=5)
     createdAt: datetime
     user: ReviewUser
+
+class CreateMovieData(BaseModel):
+    name: str
+    description: str
+    genreId: int
+    imageUrl: str
+    price: int
+    location: Location
+    published: bool
 
 class Movie(BaseModel):
     id: int

@@ -1,9 +1,10 @@
-import requests, pytest, random
+import requests, pytest, random, allure
 from utils.data_generator import DataGenerator
 from faker import Faker
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
+from models.base_models import Movie
 
 
 # *API classes import
@@ -89,14 +90,6 @@ def admin_login():
 
     return login_data
 
-
-# *get user by id
-@pytest.fixture(scope="session")
-def get_user():
-
-    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
-
-    return user_id
 
 #* prepare user and return registration payload for SESSION
 @pytest.fixture(scope="session")
@@ -199,9 +192,9 @@ def test_user(admin_api_manager: ApiManager):
             expected_status=200
         )
 
-# user deletion
+
 @pytest.fixture(scope="function")
-def test_user_deletion(unauthenticated_api_manager: ApiManager,
+def oneshot_user_id(unauthenticated_api_manager: ApiManager,
                        oneshot_user: dict
                        ):
 
@@ -215,12 +208,10 @@ def test_user_deletion(unauthenticated_api_manager: ApiManager,
 
     return id
 
-    
-#* PREPARES NEW MOVIE DATA
+
 @pytest.fixture(scope="function")
 def new_movie_data(unauthenticated_api_manager):
 
-    #grab existing random genre first to avoid error
     response = unauthenticated_api_manager.movies_api.get_genres(
         expected_status=200
     )
@@ -241,7 +232,7 @@ def new_movie_data(unauthenticated_api_manager):
 
     return data
 
-#* CREATES NEW MOVIE & tears it down
+
 @pytest.fixture(scope="function")
 def create_test_movie(
     admin_api_manager: ApiManager,
@@ -256,11 +247,25 @@ def create_test_movie(
 
     yield data
 
-    #teardown
-    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+    with allure.step("Teardown"):
+        admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
 
 
-# *grabs movie ID from create_test_movie
+@pytest.fixture(scope="function")
+def create_test_movie_no_teardown(
+    super_admin,
+    new_movie_data: dict) -> Movie:
+
+    response = super_admin.api.movies_api.create_movie(
+        new_movie_data,
+        expected_status=201
+    )
+
+    data = response.json()
+
+    return Movie(**data)
+
+
 @pytest.fixture(scope="function")
 def movie_id(create_test_movie):
 
@@ -268,15 +273,7 @@ def movie_id(create_test_movie):
 
     return id
 
-#* grabs invalid movie ID
-@pytest.fixture(scope="function")
-def invalid_movie_id():
 
-    id = random.randint(500000, 600000)
-
-    return id
-
-# *finds an existing movie and grabs ID
 @pytest.fixture(scope="function")
 def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
@@ -286,16 +283,16 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
     )
 
     data = response.json()
-
     movies = data["movies"]
 
     if len(movies) < 1:
         raise RuntimeError("Couldn't grab as movie list length is less than 1!")
     
-    movie = movies[1]
+    movie = movies[0]
     id = movie["id"]
 
     return id
+
 
 @pytest.fixture(scope="session")
 def filter_parameters():
@@ -311,7 +308,7 @@ def filter_parameters():
 
     return parameters
 
-# *prepares general valid filter parameters for /movies
+
 @pytest.fixture(scope="function")
 def valid_filter_params():
 
@@ -486,7 +483,7 @@ def grab_movie_with_reviews(
 
 #* POSTS a review to an existing movie
 @pytest.fixture(scope="function")
-def generate_review(admin_api_manager):
+def generate_review(super_admin):
     
     data = {
     "rating": 5,
@@ -501,7 +498,7 @@ def generate_review(admin_api_manager):
     params["userId"] = data["userId"]
 
     try:
-        admin_api_manager.movies_api.delete_review(
+        super_admin.api.movies_api.delete_review(
             params=params,
             expected_status=200
         )

@@ -1,8 +1,10 @@
 import json
 import requests
+import allure
 import logging
 import os
 from typing import Union, Iterable
+
 class CustomRequester:
 
     base_headers = {
@@ -18,6 +20,7 @@ class CustomRequester:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
+    @allure.step("Отправить HTTP-запрос и проверить статус")
     def send_request(
             self, 
             method,
@@ -50,12 +53,13 @@ class CustomRequester:
 
         return response
 
+    allure.step("Обновление headers сессии")
     def _update_session_headers(self, headers: dict):
         self.session.headers.update(headers)
 
+    allure.step("Логирование запросов и ответов")
     def log_request_and_response(self, response):
         """
-        Логирование запросов и ответов.
         :param response: Объект ответа requests.Response.
         """
         try:
