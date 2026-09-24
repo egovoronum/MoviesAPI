@@ -120,11 +120,11 @@ def invalid_page():
     return params
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def invalid_location():
 
     params = {
-        "pageSize": random.randint(10, 20),
+        "pageSize": 1,
         "page": 1,
         "minPrice": 1,
         "maxPrice": 10000,

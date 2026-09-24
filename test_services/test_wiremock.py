@@ -16,8 +16,7 @@ def setup_wiremock_mock():
     payload = {
         "request": {
             "method": "GET",
-            "url": "/gismeteo/get/weather" #мы указываем что если ктото сделает запрос на ручку
-										                     #http://localhost:8080/gismeteo/get/weather
+            "url": "/gismeteo/get/weather"
         },
         "response": {
             "status": 200,# ему вернется ответ с кодом 200
@@ -27,4 +26,4 @@ def setup_wiremock_mock():
             }
         }
     }
-    requests.post(url, json=payload) #Отправляем запрос на наш WireMock
+    requests.post(url, json=payload) 

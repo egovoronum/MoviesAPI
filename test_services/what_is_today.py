@@ -1,22 +1,12 @@
-#test_services\service_what_is_today.py
-
-# для запуска сервера 
-# pip install -r requirements.txt
-# python test_services\service_what_is_today.py
-# для проверки работоспособности curl http://127.0.0.1:16002/ping
-
 import datetime
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
 
-# Модель для входного JSON
 class DateTimeRequest(BaseModel):
     currentDateTime: str  # Формат: "2025-02-13T21:43Z"
 
-# Список праздников в России (пример)
 russian_holidays = {
     "01-01": "Новый год",
     "01-07": "Рождество Христово",
@@ -52,7 +42,6 @@ def what_is_today(request: DateTimeRequest):
 def ping():
     return "PONG!"
 
-# Запуск сервера
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0",  port=16002)

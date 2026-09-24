@@ -1,4 +1,6 @@
-import pytest, allure
+import pytest
+import allure
+from pytest_check import check
 from clients.api_manager import ApiManager
 from models.base_models import ApiError, CreateMovieData
 from entities.user import User
@@ -28,8 +30,9 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            assert "Bad Request" in e.error
-            assert "minPrice must be less than maxPrice" in e.message
+            with check:
+                check.equal(e.error, "Bad Request", "ожидался другой error")
+                check.equal(e.message, "minPrice must be less than maxPrice", "ожидался другой message")
 
 
     @allure.title("Фильтр цены с негативным значением")
@@ -57,8 +60,9 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            assert "Bad Request" in e.error
-            assert "Поле minPrice имеет минимальную величину 1" in e.message
+            with check:
+                check.equal(e.error, "Bad Request", "ожидался другой error")
+                check.equal(e.message[0], "Поле minPrice имеет минимальную величину 1", "ожидался другой message")
 
 
     @allure.title("Фильтр пагинации с негативным значением")
@@ -84,8 +88,9 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            assert "Bad Request" in e.error
-            assert "Поле page имеет минимальную величину 1" in e.message
+            with check:
+                check.equal(e.error, "Bad Request", "ожидался другой error")
+                check.equal(e.message, "Поле page имеет минимальную величину 1", "ожидался другой message")
             
 
     @allure.title("Фильтр локации с невалидным значением")
@@ -93,6 +98,8 @@ class TestMovieFilters:
         проверяет валидацию локаций: 
         API возвращает ошибку 400 при некорректном значении поля location
         ожидаемое сообщение содержит текст "Некорректные данные"
+        Иногда проверка check.equal(e.error, "Bad Request", "ожидался другой error")
+        Не проходит, т.к. API не всегда возвращает это поле!
         """)
     @pytest.mark.validation
     def test_invalid_location_filter(
@@ -111,8 +118,8 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            assert "Bad Request" in e.error
-            assert "Некорректные данные" in e.message
+            with check:
+                check.equal(e.error, "Bad Request", "ожидался другой message")
 
 
 @allure.epic("Негативные проверки Movies API")
@@ -137,13 +144,17 @@ class TestEditMovies:
         )
 
         e = ApiError(**response.json())
-        assert "Фильм не найден" in e.message
-        assert "Not Found" in e.error
+
+        with check:
+            check.equal(e.error, "Not Found", "ожидался другой error")
+            check.equal(e.message, "Фильм не найден", "ожидался другой message")
+
 
     @allure.title("Проверка создания фильма с невалидными данными (ожидается 400)")
     @allure.description("""
     проверяет, что API возвращает ошибку 400 при создании фильма с некорректными данными
     валидирует поле location (должен быть MSK или SPB)
+    Поле message возвращается списком [] по какой-то причине
     """)
     @pytest.mark.regression
     def test_create_invalid_movie(
@@ -159,8 +170,9 @@ class TestEditMovies:
 
         e = ApiError(**response.json())
 
-        assert "Bad Request" in e.error
-        assert "Поле location должно быть одним из: MSK, SPB" in e.message
+        with check:
+            check.equal(e.error, "Bad Request", "ожидался другой error")
+            check.equal(e.message[0], "Поле location должно быть одним из: MSK, SPB", "ожидался другой message")
         
 
     @allure.title("Проверка может ли USER создать фильм (ожидается 403)")
@@ -184,7 +196,9 @@ class TestEditMovies:
         )
 
         e = ApiError(**response.json())
-        assert "Forbidden" in e.error
-        assert "Forbidden resource" in e.message
+        
+        with check:
+            check.equal(e.error, "Forbidden", "ожидался другой error")
+            check.equal(e.message, "Forbidden resource", "ожидался другой message")
         
 
