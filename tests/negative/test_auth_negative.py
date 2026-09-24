@@ -1,4 +1,6 @@
-import pytest, allure
+import pytest
+import allure
+from pytest_check import check
 from models.base_models import ApiError
 from entities.user import User
 
@@ -36,5 +38,7 @@ class TestNegativeAuthAPI:
         if status != 200:
             with allure.step(f"Сверяем ошибку доступа {user} с моделью ApiError"):    
                 e = ApiError(**response.json())
-                assert e.error == "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403"
-                assert e.statusCode == 403, "статус код не 403"
+                
+                with check:
+                    check.equal(e.error, "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403")
+                    check.equal(e.statusCode, 403, "статус код не 403")
