@@ -1,4 +1,6 @@
-import pytest, allure
+import pytest
+import allure
+from pytest_check import check
 from clients.api_manager import ApiManager 
 from models.base_models import CreatedUser, LoggedInUser, ApiError
 from uuid import UUID
@@ -22,11 +24,12 @@ class TestUsers:
             validated_response = CreatedUser(**response)
 
         with allure.step("проверяем поля id, email, fullName, verified"):
-            assert validated_response.id != '', "ID должен быть не пустым"
-            assert validated_response.email == create_user_data['email'], "email не совпадает"
-            assert validated_response.fullName == create_user_data['fullName'], "fullName не совпадает"
-            assert validated_response.verified is True, "поле verified не True"
-
+            with check:
+                check.not_equal(validated_response.id, "", "ID не должен быть пустым")
+                check.equal(validated_response.email, create_user_data['email'], "email не совпадает")
+                check.equal(validated_response.fullName, create_user_data['fullName'], "fullName не совпадает")
+                check.equal(validated_response.verified, True, "поле verified не True")
+                
 
     @allure.title("Получение информации о пользователе по идентификатору и email")
     @allure.description("""
