@@ -361,7 +361,7 @@ def asc_filter() -> ValidFilterParams:
 
 #* Prepares descending filter for movies
 @pytest.fixture(scope="function")
-def desc_filter():
+def desc_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(5, 10),
@@ -373,7 +373,7 @@ def desc_filter():
         "createdAt": "desc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
 #* Prepares patch data for editing a movie
