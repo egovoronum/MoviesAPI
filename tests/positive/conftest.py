@@ -4,7 +4,7 @@ from faker import Faker
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
-from models.base_models import Movie
+from models.base_models import Movie, LoginData
 
 
 # *API classes import
@@ -81,14 +81,14 @@ def api_login(session):
 
 #* admin login data
 @pytest.fixture(scope="session")
-def admin_login():
+def admin_login() -> LoginData:
 
     login_data = {
         "email": ADMIN_EMAIL,
         "password": ADMIN_PASSWORD
     }
 
-    return login_data
+    return LoginData(**login_data)
 
 
 #* prepare user and return registration payload for SESSION

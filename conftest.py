@@ -15,7 +15,7 @@ from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from entities.user import User
 from enums.roles import Roles
-from models.base_models import Movie, Genre
+from models.base_models import Movie, Genre, CreateUserData
 from db_requester.db_helper import DBHelper
 from db_requester.db_client import get_db_session
 
@@ -35,7 +35,7 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 
 
 @pytest.fixture(scope="function")
-def oneshot_user() -> dict[str, str]:
+def oneshot_user():
    
     password = fake.password(
         length=12,
@@ -52,20 +52,27 @@ def oneshot_user() -> dict[str, str]:
         "passwordRepeat": password,
     }
 
-    return register_data  
+    return register_data
 
 
 @pytest.fixture(scope="function")
-def create_user_data(oneshot_user) -> dict:
+def create_user_data(oneshot_user, super_admin) -> Generator[CreateUserData, None, None]:
     updated_data = oneshot_user.copy()
     updated_data.update({
         "verified": True,
         "banned": False
     })
-    return updated_data
+
+    user = CreateUserData(**updated_data)
+
+    with allure.step("Teardown фикстуры create_user_data"):
+        
+        yield user
+        super_admin.api.auth_api.delete_user(user.id)
+
 
 @pytest.fixture(scope="function")
-def create_admin_user_data(oneshot_user) -> dict:
+def create_admin_user_data(oneshot_user):
     updated_data = oneshot_user.copy()
     updated_data.update({
         "roles": ["USER", "ADMIN"],

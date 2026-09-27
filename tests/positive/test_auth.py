@@ -2,7 +2,7 @@ import pytest
 import allure
 from pytest_check import check
 from clients.api_manager import ApiManager 
-from models.base_models import CreatedUser, LoggedInUser, ApiError
+from models.base_models import CreatedUser, LoggedInUser, ApiError, CreateUserData, LoginData
 from uuid import UUID
 from entities.user import User
 
@@ -15,10 +15,10 @@ class TestUsers:
         валидирует поля id, email, fullName, verified в ответе CreatedUser
         """)
     @pytest.mark.regression
-    def test_create_user(self, super_admin, create_user_data: dict):
+    def test_create_user(self, super_admin: User, create_user_data: CreateUserData):
 
         with allure.step("Делаем запрос на создание юзера"):    
-            response = super_admin.api.user_api.create_user(create_user_data).json()
+            response = super_admin.api.user_api.create_user(create_user_data.model_dump()).json()
 
         with allure.step("Валидируем ответ по модели CreatedUser"):
             validated_response = CreatedUser(**response)
@@ -26,8 +26,8 @@ class TestUsers:
         with allure.step("проверяем поля id, email, fullName, verified"):
             with check:
                 check.not_equal(validated_response.id, "", "ID не должен быть пустым")
-                check.equal(validated_response.email, create_user_data['email'], "email не совпадает")
-                check.equal(validated_response.fullName, create_user_data['fullName'], "fullName не совпадает")
+                check.equal(validated_response.email, create_user_data.email, "email не совпадает")
+                check.equal(validated_response.fullName, create_user_data.fullName, "fullName не совпадате")
                 check.equal(validated_response.verified, True, "поле verified не True")
                 
 
@@ -37,21 +37,22 @@ class TestUsers:
         подтверждает совпадение id, email, fullName и verified между обоими запросами
         """)
     @pytest.mark.regression
-    def test_get_user_by_locator(self, super_admin, create_user_data: dict):
+    def test_get_user_by_locator(self, super_admin: User, create_user_data: CreateUserData):
 
         with allure.step("Делаем запросы на создание юзера и GET по id и email"):
-            created_user_response = super_admin.api.user_api.create_user(create_user_data).json()
+            created_user_response = super_admin.api.user_api.create_user(create_user_data.model_dump()).json()
             response_by_id = super_admin.api.user_api.get_user_info(created_user_response['id']).json()
-            response_by_email = super_admin.api.user_api.get_user_info(create_user_data['email']).json()
+            response_by_email = super_admin.api.user_api.get_user_info(created_user_response['email']).json()
 
         with allure.step("""
         Проверяем: id совпадают, email совпадают, fullName совпадают, verified = True
         """):
-            assert response_by_id == response_by_email, "Содержание ответов должно быть идентичным"
-            assert response_by_id.get('id') and response_by_id['id'] != '', "ID должен быть не пустым"
-            assert response_by_id.get('email') == create_user_data['email']
-            assert response_by_id.get('fullName') == create_user_data['fullName']
-            assert response_by_id.get('verified') is True
+            with check:
+                check.equal(response_by_id, response_by_email, "содержание ответов должно быть идентичным")
+                check.not_equal(response_by_id["id"], "", "ID не должен быть пустым") 
+                check.equal(response_by_id["email"], create_user_data.email, "email должны совпадать")
+                check.equal(response_by_id["fullName"], create_user_data.fullName, "fullName должно совпадать")
+                check.equal(response_by_id["verified"], True, "поле verified должно быть bool True")
 
 
     @allure.title("Регистрация нового пользователя")
@@ -64,21 +65,23 @@ class TestUsers:
     def test_register_user(
             self,
             unauthenticated_api_manager: ApiManager,
-            test_user: dict
+            create_user_data: CreateUserData
         ):
 
         with allure.step("Делаем запрос на создание"):
-            response = unauthenticated_api_manager.auth_api.register_user(test_user)
+            response = unauthenticated_api_manager.auth_api.register_user(create_user_data.model_dump())
 
         with allure.step("Сверяем с моделью models.base_models CreatedUser"):
             data = CreatedUser(**response.json())
 
-            assert data.id != '', "ответ должен вернуть ID"
-            assert data.email == test_user["email"], "поле email не совпадает"
-            assert data.fullName == test_user["fullName"], "поле fullName не совпадает"
+        with allure.step("Сверяем поля"):
+            with check:
+                check.not_equal(data.id, "", "ответ должен вернуть ID")
+                check.equal(data.email, create_user_data.email, "поле email не совпадает")
+                check.equal(data.fullName, create_user_data.fullName, "поле fullName не совпадает")
 
         with allure.step("Передаем id в teardown фикстуры"):
-            test_user["id"] = data.id
+            create_user_data.id = data.id
 
     @allure.title("Логин супер-админа")
     @allure.description("""
@@ -89,19 +92,19 @@ class TestUsers:
     def test_admin_login(
             self,
             unauthenticated_api_manager: ApiManager,
-            admin_login: dict
+            admin_login: LoginData
         ):
 
         with allure.step("отправляем запрос с данными супер админа"):
             response = unauthenticated_api_manager.auth_api.login_user(
-                admin_login,
-                expected_status=201
+                admin_login.model_dump(),
+                expected_status=200
             )
             
         with allure.step ("сверяем с моделью"):
             data = LoggedInUser(**response.json())
 
-        assert admin_login["email"] == data.user.email, "поле user не совпадает с данными логина админа"
+        assert admin_login.email == data.user.email, "поле user не совпадает с данными логина админа"
         assert "SUPER_ADMIN" in data.user.roles, "user не имеет прав SUPER_ADMIN"
 
 

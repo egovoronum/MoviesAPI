@@ -19,6 +19,15 @@ class TestUser(BaseModel):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
+class CreateUserData(BaseModel):
+    id: Optional[str] = None
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=8, max_length=20)
+    passwordRepeat: str = Field(..., min_length=8, max_length=20)
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
 class CreatedUser(BaseModel):
     id: str
     email: str = Field(..., min_length=3)
@@ -27,10 +36,14 @@ class CreatedUser(BaseModel):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
+class LoginData(BaseModel):
+    email: str = Field(..., min_length=3)
+    password: str = Field(..., min_length=8, max_length=20)
+
 class LoggedInUser(BaseModel):
     user: CreatedUser
     accessToken: str
-    refreshToken: UUID
+    refreshToken: Optional[UUID] = None  
     expiresIn: int
 
 class Location(str, Enum):
