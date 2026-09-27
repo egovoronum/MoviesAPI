@@ -1,4 +1,5 @@
 import pytest, allure
+from pytest_check import check
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
@@ -7,7 +8,7 @@ from models.db_movie import MovieDBModel
 from entities.user import User
 
 
-@allure.title("Проверка доступов к DELETE MOVIE")
+
 @allure.description("""
     проверяет авторизацию DELETE MOVIE
     super_admin может удалять (200)
@@ -21,12 +22,17 @@ from entities.user import User
     ("common_user", 403),
 ], ids=["SUPER ADMIN", "ADMIN USER", "COMMON USER"])
 def test_access_delete_movie(
-    request, super_admin, oneshot_movie_skip_teardown, user, status
+    request, 
+    super_admin: User, 
+    oneshot_movie_skip_teardown: Movie, 
+    user, 
+    status
     ):
+
+        allure.dynamic.title(f"Проверка доступов к DELETE MOVIE {user} {status}")
 
         client = request.getfixturevalue(user)
         created_movie = oneshot_movie_skip_teardown
-
         movie_deleted = False
 
         try:

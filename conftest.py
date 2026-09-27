@@ -9,13 +9,13 @@ from dotenv import load_dotenv
 from faker import Faker
 from sqlalchemy.orm import Session
 from typing import Generator
-
+from pytest_check import check
 # ─── модули проекта ────────────────────────────────────────────────────────────
 from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from entities.user import User
 from enums.roles import Roles
-from models.base_models import Movie, Genre, CreateUserData
+from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel
 from db_requester.db_helper import DBHelper
 from db_requester.db_client import get_db_session
 
@@ -56,7 +56,7 @@ def oneshot_user():
 
 
 @pytest.fixture(scope="function")
-def create_user_data(oneshot_user, super_admin) -> Generator[CreateUserData, None, None]:
+def create_user_data(oneshot_user) -> CreateUserData:
     updated_data = oneshot_user.copy()
     updated_data.update({
         "verified": True,
@@ -65,21 +65,21 @@ def create_user_data(oneshot_user, super_admin) -> Generator[CreateUserData, Non
 
     user = CreateUserData(**updated_data)
 
-    with allure.step("Teardown фикстуры create_user_data"):
-        
-        yield user
-        super_admin.api.auth_api.delete_user(user.id)
+    return user
 
 
 @pytest.fixture(scope="function")
-def create_admin_user_data(oneshot_user):
+def create_admin_user_data(oneshot_user) -> CreateUserData:
     updated_data = oneshot_user.copy()
     updated_data.update({
         "roles": ["USER", "ADMIN"],
         "verified": True,
         "banned": False
     })
-    return updated_data
+
+    admin_user = CreateUserData(**updated_data)
+
+    return admin_user
 
 @pytest.fixture
 def user_session():
@@ -101,18 +101,18 @@ def user_session():
 def common_user(
     user_session,
     super_admin: User,
-    create_user_data: dict
+    create_user_data: CreateUserData
     ) -> Generator[User, None, None]:
 
     new_session = user_session()
 
     common_user = User(
-        create_user_data['email'],
-        create_user_data['password'],
+        create_user_data.email,
+        create_user_data.password,
         [Roles.USER],
         new_session)
 
-    response = super_admin.api.user_api.create_user(create_user_data)
+    response = super_admin.api.user_api.create_user(create_user_data.model_dump())
 
     data = response.json()
     new_common_user_id = data["id"]
@@ -132,20 +132,23 @@ def common_user(
 def admin_user(
     user_session,
     super_admin: User,
-    create_admin_user_data: dict
+    create_admin_user_data: CreateUserData
 ) -> Generator[User, None, None]:
+    
     new_session = user_session()
 
     admin_user = User(
-        create_admin_user_data['email'],
-        create_admin_user_data['password'],
+        create_admin_user_data.email,
+        create_admin_user_data.password,
         [Roles.ADMIN],
         new_session)
 
-    
-    response = super_admin.api.user_api.create_user(create_admin_user_data)
-    data = response.json()
-    new_admin_id = data["id"]
+    with allure.step("Создаем юзера по модели CreateUserData"):
+        response = super_admin.api.user_api.create_user(create_admin_user_data.model_dump())
+        data = response.json()
+
+    with allure.step("сохраняем id для последующей передачи в teardown"):   
+        new_admin_id = data["id"]
 
     with allure.step("""
         создаем patch_data и делаем PATCH юзера
@@ -158,12 +161,20 @@ def admin_user(
             "banned": False
             }
 
-        super_admin.api.user_api.patch_user(new_admin_id, patch_data)
-        admin_user.api.auth_api.authenticate(admin_user.creds)
+        with allure.step("Патчим юзера, чтобы получить админа"):    
+            patch_response = super_admin.api.user_api.patch_user(new_admin_id, patch_data)
+            admin_user_model = PatchResponseModel(**patch_response.json())
+
+        with allure.step("Убеждаемся что фикстура пропатчила и 'ADMIN' есть в roles"):
+            with check:
+                check.is_in("ADMIN", admin_user_model.roles, "у юзера нет роли ADMIN")
+        
+        with allure.step("логиним новоиспеченного админа"):    
+            admin_user.api.auth_api.authenticate(admin_user.creds)
 
     yield admin_user
 
-    with allure.step("tearing down admin_user"):
+    with allure.step("teardown админа"):
         super_admin.api.user_api.delete_user(
             new_admin_id,
             expected_status=200

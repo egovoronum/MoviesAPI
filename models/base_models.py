@@ -25,6 +25,7 @@ class CreateUserData(BaseModel):
     fullName: str = Field(..., min_length=1, max_length=255)
     password: str = Field(..., min_length=8, max_length=20)
     passwordRepeat: str = Field(..., min_length=8, max_length=20)
+    roles: Optional[list[Roles]] = None
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
@@ -33,6 +34,14 @@ class CreatedUser(BaseModel):
     email: str = Field(..., min_length=3)
     fullName: str = Field(..., min_length=1, max_length=255)
     roles: list[Roles]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class PatchResponseModel(BaseModel):
+    id: Optional[str] = None
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    roles: Optional[list[Roles]]
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
