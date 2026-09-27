@@ -4,7 +4,7 @@ from faker import Faker
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
-from models.base_models import Movie, LoginData
+from models.base_models import Movie, LoginData, ValidFilterParams
 
 
 # *API classes import
@@ -310,7 +310,7 @@ def filter_parameters():
 
 
 @pytest.fixture(scope="function")
-def valid_filter_params():
+def valid_filter_params() -> ValidFilterParams:
 
     params = {
         "pageSize": 10,
@@ -321,13 +321,13 @@ def valid_filter_params():
         "published": True,
         "createdAt": "asc"
     }
-
-    return params
+    
+    return ValidFilterParams(**params)
 
 
 # *prepares valid price filter parameters for /movies
 @pytest.fixture(scope="function")
-def valid_price_filter():
+def valid_price_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(1, 10),
@@ -339,12 +339,12 @@ def valid_price_filter():
         "createdAt": "asc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
 #* Prepares ascending filter for movies
 @pytest.fixture(scope="function")
-def asc_filter():
+def asc_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(5, 10),
@@ -356,7 +356,7 @@ def asc_filter():
         "createdAt": "asc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
 #* Prepares descending filter for movies

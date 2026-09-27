@@ -1,10 +1,10 @@
 import pytest, allure
+from datetime import datetime, timezone
 from pytest_check import check
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
-from models.base_models import Movie, ApiError, Genre, Review
-from models.db_movie import MovieDBModel
+from models.base_models import Movie, ApiError, Genre, Review, ValidFilterParams, MoviesPage
 from entities.user import User
 
 
@@ -100,14 +100,14 @@ class TestMovies:
     def test_get_movies(
             self,
             common_user: User,
-            valid_filter_params: dict
+            valid_filter_params: ValidFilterParams
         ):
 
-        page_size = valid_filter_params["pageSize"]
+        page_size = valid_filter_params.pageSize
 
         with allure.step("отправляем запрос"):            
             response = common_user.api.movies_api.get_movies(
-                params=valid_filter_params, 
+                params=valid_filter_params.model_dump(), 
                 expected_status=200
             )
 
@@ -133,31 +133,28 @@ class TestMovies:
     def test_get_movies_by_price(
             self,
             common_user: User,
-            valid_price_filter: dict
+            valid_price_filter: ValidFilterParams
         ):
 
         with allure.step("отправляем запрос"):
-            params = valid_price_filter
-            min_price = params["minPrice"]
-            max_price = params["maxPrice"]
+            params = valid_price_filter.model_dump()
+            min_price = valid_price_filter.minPrice
+            max_price = valid_price_filter.maxPrice
 
             response = common_user.api.movies_api.get_movies(
                 params=params, 
                 expected_status=200
             )
             
-            data = response.json()
-            movies = data["movies"]
+            data = MoviesPage(**response.json())
+            movies = data.movies
 
         with allure.step("проверяем работоспособность сортировки"):
             for movie in movies:
-                assert movie["price"] >= min_price, (
-                    f"Price out of specified range. Look at min_price"
-                )
-                assert movie["price"] <= max_price, (
-                    f"Price out of specified range. Look at max_price"
-                )
-
+                with check:
+                    check.greater_equal(movie.price, min_price, "Цена не может быть ниже или равна minPrice")
+                    check.less_equal(movie.price, max_price, "Цена не может быть выше или равна maxPrice")
+     
 
     @allure.title("Сортировка фильмов: ASC")
     @allure.description("""
@@ -169,32 +166,31 @@ class TestMovies:
     def test_get_movies_asc(
             self,
             common_user: User,
-            asc_filter: dict
+            asc_filter: ValidFilterParams
         ):
 
         with allure.step("отправляем запрос с ascending фильтром"):
             response = common_user.api.movies_api.get_movies(
-                params=asc_filter,
+                params=asc_filter.model_dump(),
                 expected_status=200
             )
 
 
-            data = response.json()
-            movies = data["movies"]
+            data = MoviesPage(**response.json())
+            movies = data.movies
 
-        with allure.step("проверяем фильмы на соответствие модели"):
+        with allure.step("проверяем сортировку"): 
+            previous = datetime(1900, 5, 26, 11, 0, 15, 900000, tzinfo=timezone.utc)
             
             for movie in movies:
-                Movie(**movie)
-
-            
-        with allure.step("проверяем сортировку"):
-            previous = "1900-05-26T11:00:15.900Z"
-
-            for movie in movies:
-                assert "createdAt" in movie, (f"No createdAt in movie.")
-                current = movie["createdAt"]
-                assert current >= previous, f"createdAt sorting broken: {current} < {previous}"
+                current = movie.createdAt
+                
+                check.greater_equal(
+                    current, 
+                    previous, 
+                    f"сортировка не работает должным образом: {current} < {previous}"
+                    )
+                
                 previous = current
 
 

@@ -151,6 +151,7 @@ def admin_user(
         new_admin_id = data["id"]
 
     with allure.step("""
+        Фикстура немного заморочена, т.к. своеобразный API у movies
         создаем patch_data и делаем PATCH юзера
         т.к. невозможно указать ROLES: ["ADMIN"] при создании!
         """):   

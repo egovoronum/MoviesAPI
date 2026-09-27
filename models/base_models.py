@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal, Union, List
 from enums.roles import Roles
+from enums.locations import Locations
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
@@ -55,6 +56,24 @@ class LoggedInUser(BaseModel):
     refreshToken: Optional[UUID] = None  
     expiresIn: int
 
+"""python
+пока оставляю minPrice/maxPrice без логики
+можно добавить 
+@model_validator(mode="after")
+    def check_page_le_page_size(self):
+        if self.page > self.pageSize:
+            raise ValueError("page must be <= pageSize")
+        return self
+"""
+class ValidFilterParams(BaseModel):
+    pageSize: int = Field(..., ge=1, le=50)
+    page: int = Field(..., ge=1, le=50)
+    minPrice: int = Field(..., ge=1, le=9999)
+    maxPrice: int = Field(..., ge=1, le=9999)
+    locations: Union[Locations, List[Locations]]
+    published: bool = True
+    createdAt: Literal["asc", "desc"] = "asc"
+
 class Location(str, Enum):
     MSK = "MSK"
     SPB = "SPB"
@@ -87,7 +106,7 @@ class Movie(BaseModel):
     name: str
     description: str
     genreId: int
-    imageUrl: str
+    imageUrl: Optional[str]
     price: int
     rating: float = Field(..., ge=0, le=5)
     location: Location
