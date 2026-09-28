@@ -290,6 +290,7 @@ class TestEditMovies:
         with allure.step("сверяем созданный фильм с моделью"):
             Movie(**create_test_movie)
 
+
     @allure.title("DELETE фильм (проверка удаления в БД)")
     @allure.description("""
         проверка DELETE MOVIE с проверкой базы

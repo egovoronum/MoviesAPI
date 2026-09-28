@@ -1,14 +1,28 @@
 import requests, allure
+
+
 from custom_requester.custom_requester import CustomRequester
 from constants import AUTH_URL
 
+
+from models.base_models import CreateUserData, PatchUserModel
+
+
+
 class UserAPI(CustomRequester):
-    def __init__(self, session: requests.Session):
+    def __init__(
+        self, 
+        session: requests.Session
+    ):
         super().__init__(session=session, base_url=AUTH_URL)
         self.session = session
 
     allure.step("Получение информации о пользователе(UserAPI)")    
-    def get_user_info(self, user_id:int, expected_status=200):
+    def get_user_info(
+        self, 
+        user_id:str, 
+        expected_status=200
+    ):
         return self.send_request(
             method="GET",
             endpoint=f"/user/{user_id}",
@@ -16,7 +30,11 @@ class UserAPI(CustomRequester):
         )
 
     allure.step("Удаление пользователя(UserAPI)")    
-    def delete_user(self, user_id:str, expected_status=200):
+    def delete_user(
+        self, 
+        user_id:str, 
+        expected_status=200
+    ):
         return self.send_request(
             method="DELETE",
             endpoint=f"/user/{user_id}",
@@ -24,20 +42,29 @@ class UserAPI(CustomRequester):
         )
 
     allure.step("Создание пользователя (UserAPI)")
-    def create_user(self, user_data, expected_status=201):
+    def create_user(
+        self, 
+        user_data:CreateUserData, 
+        expected_status=201
+    ):
         return self.send_request(
             method="POST",
             endpoint=f"/user",
-            data=user_data,
+            data=user_data.model_dump(),
             expected_status=expected_status
         )
 
     allure.step("Изменение данных о пользователе, PATCH (UserAPI)")
-    def patch_user(self, user_id:str, user_data, expected_status=200):
+    def patch_user(
+        self, 
+        user_id:str, 
+        user_data:PatchUserModel, 
+        expected_status=200
+    ):
         return self.send_request(
             method="PATCH",
             endpoint=f"/user/{user_id}",
-            data=user_data,
+            data=user_data.model_dump(exclude_none=True),
             expected_status=expected_status
         )
         

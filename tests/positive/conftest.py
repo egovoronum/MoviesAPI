@@ -86,7 +86,9 @@ def admin_login() -> LoginData:
         "password": ADMIN_PASSWORD
     }
 
-    return LoginData(**login_data)
+    model = LoginData.model_validate(login_data)
+
+    return model
 
 
 #* prepare user and return registration payload for SESSION

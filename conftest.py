@@ -15,7 +15,7 @@ from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from entities.user import User
 from enums.roles import Roles
-from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel
+from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel, PatchUserModel
 from db_requester.db_helper import DBHelper
 from db_requester.db_client import get_db_session
 
@@ -63,7 +63,7 @@ def create_user_data(oneshot_user) -> CreateUserData:
         "banned": False
     })
 
-    user = CreateUserData(**updated_data)
+    user = CreateUserData.model_validate(updated_data)
 
     return user
 
@@ -112,7 +112,7 @@ def common_user(
         [Roles.USER],
         new_session)
 
-    response = super_admin.api.user_api.create_user(create_user_data.model_dump())
+    response = super_admin.api.user_api.create_user(create_user_data)
 
     data = response.json()
     new_common_user_id = data["id"]
@@ -144,7 +144,7 @@ def admin_user(
         new_session)
 
     with allure.step("Создаем юзера по модели CreateUserData"):
-        response = super_admin.api.user_api.create_user(create_admin_user_data.model_dump())
+        response = super_admin.api.user_api.create_user(create_admin_user_data)
         data = response.json()
 
     with allure.step("сохраняем id для последующей передачи в teardown"):   
@@ -162,9 +162,11 @@ def admin_user(
             "banned": False
             }
 
+        patch_data_model = PatchUserModel.model_validate(patch_data)
+
         with allure.step("Патчим юзера, чтобы получить админа"):    
-            patch_response = super_admin.api.user_api.patch_user(new_admin_id, patch_data)
-            admin_user_model = PatchResponseModel(**patch_response.json())
+            patch_response = super_admin.api.user_api.patch_user(new_admin_id, patch_data_model)
+            admin_user_model = PatchResponseModel.model_validate(patch_response.json())
 
         with allure.step("Убеждаемся что фикстура пропатчила и 'ADMIN' есть в roles"):
             with check:

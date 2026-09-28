@@ -18,18 +18,17 @@ class TestUsers:
     def test_create_user(self, super_admin: User, create_user_data: CreateUserData):
 
         with allure.step("Делаем запрос на создание юзера"):    
-            response = super_admin.api.user_api.create_user(create_user_data.model_dump()).json()
+            response = super_admin.api.user_api.create_user(create_user_data)
 
         with allure.step("Валидируем ответ по модели CreatedUser"):
-            validated_response = CreatedUser(**response)
+            validated_response = CreatedUser.model_validate(response.json())
 
         with allure.step("проверяем поля id, email, fullName, verified"):
-            with check:
-                check.not_equal(validated_response.id, "", "ID не должен быть пустым")
-                check.equal(validated_response.email, create_user_data.email, "email не совпадает")
-                check.equal(validated_response.fullName, create_user_data.fullName, "fullName не совпадате")
-                check.equal(validated_response.verified, True, "поле verified не True")
-                
+            check.not_equal(validated_response.id, "", "ID не должен быть пустым")
+            check.equal(validated_response.email, create_user_data.email, "email не совпадает")
+            check.equal(validated_response.fullName, create_user_data.fullName, "fullName не совпадате")
+            check.equal(validated_response.verified, True, "поле verified не True")
+            
 
     @allure.title("Получение информации о пользователе по идентификатору и email")
     @allure.description("""
@@ -37,22 +36,21 @@ class TestUsers:
         подтверждает совпадение id, email, fullName и verified между обоими запросами
         """)
     @pytest.mark.regression
-    def test_get_user_by_locator(self, super_admin: User, create_user_data: CreateUserData):
+    def test_get_user_by_locator(self, super_admin:User, create_user_data:CreateUserData):
 
         with allure.step("Делаем запросы на создание юзера и GET по id и email"):
-            created_user_response = super_admin.api.user_api.create_user(create_user_data.model_dump()).json()
+            created_user_response = super_admin.api.user_api.create_user(create_user_data).json()
             response_by_id = super_admin.api.user_api.get_user_info(created_user_response['id']).json()
             response_by_email = super_admin.api.user_api.get_user_info(created_user_response['email']).json()
 
         with allure.step("""
         Проверяем: id совпадают, email совпадают, fullName совпадают, verified = True
         """):
-            with check:
-                check.equal(response_by_id, response_by_email, "содержание ответов должно быть идентичным")
-                check.not_equal(response_by_id["id"], "", "ID не должен быть пустым") 
-                check.equal(response_by_id["email"], create_user_data.email, "email должны совпадать")
-                check.equal(response_by_id["fullName"], create_user_data.fullName, "fullName должно совпадать")
-                check.equal(response_by_id["verified"], True, "поле verified должно быть bool True")
+            check.equal(response_by_id, response_by_email, "содержание ответов должно быть идентичным")
+            check.not_equal(response_by_id["id"], "", "ID не должен быть пустым") 
+            check.equal(response_by_id["email"], create_user_data.email, "email должны совпадать")
+            check.equal(response_by_id["fullName"], create_user_data.fullName, "fullName должно совпадать")
+            check.equal(response_by_id["verified"], True, "поле verified должно быть bool True")
 
 
     @allure.title("Регистрация нового пользователя")
@@ -75,10 +73,9 @@ class TestUsers:
             data = CreatedUser(**response.json())
 
         with allure.step("Сверяем поля"):
-            with check:
-                check.not_equal(data.id, "", "ответ должен вернуть ID")
-                check.equal(data.email, create_user_data.email, "поле email не совпадает")
-                check.equal(data.fullName, create_user_data.fullName, "поле fullName не совпадает")
+            check.not_equal(data.id, "", "ответ должен вернуть ID")
+            check.equal(data.email, create_user_data.email, "поле email не совпадает")
+            check.equal(data.fullName, create_user_data.fullName, "поле fullName не совпадает")
 
         with allure.step("Передаем id в teardown фикстуры"):
             create_user_data.id = data.id
@@ -102,10 +99,9 @@ class TestUsers:
             )
             
         with allure.step ("сверяем с моделью"):
-            data = LoggedInUser(**response.json())
-
-        assert admin_login.email == data.user.email, "поле user не совпадает с данными логина админа"
-        assert "SUPER_ADMIN" in data.user.roles, "user не имеет прав SUPER_ADMIN"
+            data = LoggedInUser.model_validate(response.json())
+            check.equal(admin_login.email, data.user.email, "поле user не совпадает с данными логина админа")
+            check.is_in("SUPER_ADMIN", data.user.roles, "user не имеет прав SUPER_ADMIN")
 
 
     @allure.title("Получение информации о пользователе по id")
@@ -138,8 +134,8 @@ class TestUsers:
         if status != 200:
             with allure.step(f"Статус код не 200. Сверяем ошибку доступа {user} с моделью ApiError"):    
                 e = ApiError(**response.json())
-                assert e.error == "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403"
-                assert e.statusCode == 403, "статуск код не 403"
+                check.equal(e.error, "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403")
+                check.equal(e.statusCode, 403, "статус код не 403")
 
 
     @allure.title("Удаление пользователя через API (сверка с Postgres)")
@@ -164,6 +160,6 @@ class TestUsers:
 
         with allure.step("Проверяем, что Postgres вернул None по запросу в базу"):
             db_response = db_helper.get_user_by_id(oneshot_user_id)
-            assert db_response is None, "DB_HELPER: юзер не удален в базе"
+            check.is_false(db_response, "DB_HELPER: юзер не удален в базе")
 
 

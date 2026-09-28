@@ -38,6 +38,13 @@ class CreatedUser(BaseModel):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
+class PatchUserModel(BaseModel):
+    email: Optional[str] = Field(default=None, min_length=3)
+    fullName: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    roles: Optional[list[Roles]] = None
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
 class PatchResponseModel(BaseModel):
     id: Optional[str] = None
     email: str = Field(..., min_length=3)
