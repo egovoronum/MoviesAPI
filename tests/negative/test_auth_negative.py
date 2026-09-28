@@ -40,7 +40,7 @@ class TestNegativeAuthAPI:
 
         if status != 200:
             with allure.step(f"Сверяем ошибку доступа {user} с моделью ApiError"):    
-                e = ApiError(**response.json())
+                e = ApiError.model_validate(response.json())
                 
                 with check:
                     check.equal(e.error, "Forbidden", "неожиданное сообщение об ошибке, ожидалось 403")

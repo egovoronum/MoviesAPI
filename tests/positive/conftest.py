@@ -1,16 +1,31 @@
-import requests, pytest, random, allure
-from utils.data_generator import DataGenerator
-from faker import Faker
-from entities.user import User
-from custom_requester.custom_requester import CustomRequester
-from dotenv import load_dotenv
 import os
-from models.base_models import Movie, LoginData, ValidFilterParams, Genre, GenreList, CreateGenreData, CreateReviewData, CreateMovieData
 from typing import Generator
+
+import requests
+import pytest
+import random
+import allure
+from dotenv import load_dotenv
+from faker import Faker
+
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
-from clients.user_api import UserAPI
-from clients.movies_api import MoviesAPI
+
+from models.base_models import (
+    Movie,
+    LoginData,
+    ValidFilterParams,
+    GenreList,
+    CreateGenreData,
+    CreateReviewData,
+    CreateMovieData,
+    CreateUserData,
+    CreatedUser,
+)
+
+from entities.user import User
+
+from utils.data_generator import DataGenerator
 
 load_dotenv()
 
@@ -26,7 +41,6 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 fake = Faker("ru_RU")
 
 
-# session init 
 @pytest.fixture(scope="session")
 def session():
     http_session = requests.Session()
@@ -34,7 +48,6 @@ def session():
     http_session.close()
 
 
-# Admin API manager
 @pytest.fixture(scope="session")
 def admin_api_manager():
     
@@ -46,7 +59,7 @@ def admin_api_manager():
     
     http_session.close()
 
-#? обычный юзер 
+
 @pytest.fixture(scope="session")
 def user_api_manager(registered_user):
 
@@ -59,7 +72,6 @@ def user_api_manager(registered_user):
     http_session.close()
 
 
-# managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
 
@@ -70,14 +82,12 @@ def unauthenticated_api_manager():
     http_session.close()
     
 
-# login API
 @pytest.fixture(scope="session")
 def api_login(session):
 
     return AuthAPI(session)
 
 
-#* admin login data
 @pytest.fixture(scope="session")
 def admin_login() -> LoginData:
 
@@ -91,7 +101,6 @@ def admin_login() -> LoginData:
     return model
 
 
-#* prepare user and return registration payload for SESSION
 @pytest.fixture(scope="session")
 def prepared_user():
     
@@ -113,53 +122,31 @@ def prepared_user():
     return register_data
 
 
-@pytest.fixture(scope="function")
-def oneshot_user():
-   
-    password = fake.password(
-        length=12,
-        special_chars=False,
-        digits=True,
-        upper_case=True,
-        lower_case=True
-    )
-
-    register_data = {
-        "email": DataGenerator.generate_random_email(),
-        "fullName": fake.name(),
-        "password": password,
-        "passwordRepeat": password
-    }
-
-    return register_data  
-
-
 @pytest.fixture(scope="session")
 def registered_user(
     unauthenticated_api_manager: ApiManager,
     admin_api_manager: ApiManager,
-    prepared_user: dict
+    oneshot_user: CreateUserData
     ):
 
     response = unauthenticated_api_manager.auth_api.register_user(
-        user_data=prepared_user,
+        user_data=oneshot_user,
         expected_status=201
     )
 
-    created_user = response.json()
-    id = created_user["id"]
+    created_user = CreatedUser.model_validate(response.json())
+    id = created_user.id
 
-    data = [prepared_user["email"], prepared_user["password"]]
+    data = [oneshot_user.email, oneshot_user.password]
 
     yield data
 
     admin_api_manager.auth_api.delete_user(
-            id,
-            expected_status=200
-        )
+        id,
+        expected_status=200
+    )
 
 
-# *creates a test user + teardown
 @pytest.fixture(scope="function")
 def test_user(admin_api_manager: ApiManager):
 
@@ -195,16 +182,16 @@ def test_user(admin_api_manager: ApiManager):
 
 @pytest.fixture(scope="function")
 def oneshot_user_id(unauthenticated_api_manager: ApiManager,
-                       oneshot_user: dict
-                       ):
+    oneshot_user: CreateUserData
+):
 
     response = unauthenticated_api_manager.auth_api.register_user(
-            user_data=oneshot_user,
-            expected_status=201
-        )
+        user_data=oneshot_user,
+        expected_status=201
+    )
 
     oneshot_user = response.json()
-    id = oneshot_user["id"]
+    id = oneshot_user.id
 
     return id
 
@@ -238,19 +225,20 @@ def new_movie_data(unauthenticated_api_manager):
 @pytest.fixture(scope="function")
 def create_test_movie(
     super_admin: User,
-    new_movie_data: CreateMovieData):
+    new_movie_data: CreateMovieData
+) -> Generator[Movie, None, None]:
 
     response = super_admin.api.movies_api.create_movie(
         new_movie_data,
         expected_status=201
     )
 
-    data = response.json()
+    model = Movie.model_validate(response.json())
 
-    yield data
+    yield model
 
     with allure.step("Teardown"):
-        super_admin.api.movies_api.delete_movie(data["id"], expected_status=200)
+        super_admin.api.movies_api.delete_movie(model.id, expected_status=200)
 
 
 @pytest.fixture(scope="function")

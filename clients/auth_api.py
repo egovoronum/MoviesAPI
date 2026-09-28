@@ -2,6 +2,7 @@ import constants
 import custom_requester.custom_requester
 import requests
 import allure
+from models.base_models import CreateUserData
 
 class AuthAPI(custom_requester.custom_requester.CustomRequester):
     
@@ -12,11 +13,11 @@ class AuthAPI(custom_requester.custom_requester.CustomRequester):
         )
 
     @allure.step("Регистрация нового пользователя")
-    def register_user(self, user_data:dict, expected_status=201):
+    def register_user(self, user_data:CreateUserData, expected_status=201):
         return self.send_request(
             method="POST",
             endpoint=constants.REGISTER_ENDPOINT,
-            data=user_data,
+            data=user_data.model_dump(),
             expected_status=expected_status
         )
 

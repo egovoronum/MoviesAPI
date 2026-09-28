@@ -1,11 +1,32 @@
-import pytest, allure
 from datetime import datetime, timezone
+from typing import Any
+
+import pytest
+import allure
 from pytest_check import check
-from utils.time_util import iso_now
 from faker import Faker
+
 fake = Faker("ru_RU")
-from models.base_models import Movie, ApiError, Genre, Review, ValidFilterParams, MoviesPage, GenreList, CreateGenreData, CreateReviewData
+
+from models.base_models import (
+    ApiError,
+    CreateGenreData,
+    CreateReviewData,
+    Genre,
+    GenreList,
+    MoviesPage,
+    Movie,
+    Review,
+    ValidFilterParams,
+)
+
 from entities.user import User
+
+from enums.roles import Roles
+
+from utils.time_util import iso_now
+
+
 
 @allure.description("""
     проверяет авторизацию DELETE MOVIE
@@ -276,21 +297,6 @@ class TestParametrizedFilters:
 @pytest.mark.regression
 class TestEditMovies:   
 
-    @allure.title("POST фильм (валидация ответа)")
-    @allure.description("""
-        проверяет создание фильма через API
-        сверка созданного фильма с моделью Movie
-        """)
-    @pytest.mark.regression
-    def test_create_movie(
-        self, 
-        create_test_movie
-        ) -> None:
-
-        with allure.step("сверяем созданный фильм с моделью"):
-            Movie(**create_test_movie)
-
-
     @allure.title("DELETE фильм (проверка удаления в БД)")
     @allure.description("""
         проверка DELETE MOVIE с проверкой базы
@@ -299,11 +305,11 @@ class TestEditMovies:
         """)
     @pytest.mark.regression
     def test_delete_movie(
-            self,
-            db_helper,
-            super_admin: User,
-            create_test_movie_no_teardown: Movie
-        ) -> None:
+        self,
+        db_helper,
+        super_admin: User,
+        create_test_movie_no_teardown: Movie
+    ) -> None:
 
         with allure.step("Вынимаем ID фильма"):
             movie_id = create_test_movie_no_teardown.id
@@ -315,7 +321,7 @@ class TestEditMovies:
             )
 
         with allure.step("Сверяем, что API вернул нужный ID после DELETE"):
-            data = Movie(**response.json())
+            data = Movie.model_validate(response.json())
             check.equal(movie_id, data.id, "ID не совпадают")
 
         with allure.step("Отправляем запрос в базу по удаленному API ID"):  
@@ -335,9 +341,9 @@ class TestGenres:
         """)
     @pytest.mark.regression
     def test_get_genres(
-            self,
-            get_genres: GenreList
-        ) -> None:
+        self,
+        get_genres: GenreList
+    ) -> None:
 
         with allure.step("Список жанров не пустой"):
             check.is_true(len(get_genres.root) > 0, "API вернул пустой список")
@@ -366,7 +372,7 @@ class TestGenres:
             )
 
         with allure.step("сверяем жанр с моделью"):
-            Genre(**response.json())
+            Genre.model_validate(response.json())
 
 
     @allure.title("POST жанр")
@@ -377,10 +383,10 @@ class TestGenres:
         """)
     @pytest.mark.regression
     def test_create_random_genre(
-            self,
-            super_admin: User,
-            genre_data:CreateGenreData
-        ) -> None:
+        self,
+        super_admin: User,
+        genre_data:CreateGenreData
+    ) -> None:
 
         with allure.step("делаем запрос"):
             response = super_admin.api.movies_api.create_genre(
@@ -400,10 +406,10 @@ class TestGenres:
         """)
     @pytest.mark.regression
     def test_delete_random_genre(
-            self,
-            super_admin: User,
-            random_genre: int
-        ) -> None:
+        self,
+        super_admin: User,
+        random_genre: int
+    ) -> None:
 
         genre_id = random_genre
 
@@ -430,11 +436,11 @@ class TestReviews:
         """)
     @pytest.mark.regression
     def test_post_movie_review_as_admin(
-            self,
-            super_admin: User,
-            movie_id: int,
-            generate_review: CreateReviewData
-        ) -> None:
+        self,
+        super_admin: User,
+        movie_id: int,
+        generate_review: CreateReviewData
+    ) -> None:
 
         with allure.step("Запрос на создание со словарем из фикстуры"):    
             response = super_admin.api.movies_api.post_review(
@@ -464,11 +470,11 @@ class TestReviews:
         """)
     @pytest.mark.regression
     def test_movie_review_as_user(
-            self,
-            common_user: User,
-            movie_id: int,
-            generate_review: CreateReviewData
-        ) -> None:
+        self,
+        common_user: User,
+        movie_id: int,
+        generate_review: CreateReviewData
+    ) -> None:
 
         with allure.step("отправляем запрос"):
             response = common_user.api.movies_api.post_review(

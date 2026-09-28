@@ -1,17 +1,25 @@
-import requests, pytest, random
-from constants import (
-    BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
-    REGISTER_ENDPOINT, MOVIES_ENDPOINT, AUTH_URL
-)
-from utils.data_generator import DataGenerator
-from faker import Faker
-from custom_requester.custom_requester import CustomRequester
-from dotenv import load_dotenv
 import os
+
+import requests
+import pytest
+import random
+from dotenv import load_dotenv
+from faker import Faker
+
+from constants import (
+    BASE_URL,
+    HEADERS,
+    LOGIN_ENDPOINT,
+    LOGOUT_ENDPOINT,
+    REGISTER_ENDPOINT,
+    MOVIES_ENDPOINT,
+    AUTH_URL,
+)
+
+from custom_requester.custom_requester import CustomRequester
 
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
-from clients.user_api import UserAPI
 
 load_dotenv()
 

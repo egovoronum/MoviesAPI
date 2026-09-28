@@ -1,9 +1,19 @@
+from uuid import UUID
+
 import pytest
 import allure
 from pytest_check import check
-from clients.api_manager import ApiManager 
-from models.base_models import CreatedUser, LoggedInUser, ApiError, CreateUserData, LoginData
-from uuid import UUID
+
+from clients.api_manager import ApiManager
+
+from models.base_models import (
+    ApiError,
+    CreateUserData,
+    CreatedUser,
+    LoginData,
+    LoggedInUser,
+)
+
 from entities.user import User
 
 @allure.epic("Позитивные проверки UsersAPI")
@@ -75,7 +85,7 @@ class TestUsers:
     ) -> None:
 
         with allure.step("Делаем запрос на создание"):
-            response = unauthenticated_api_manager.auth_api.register_user(create_user_data.model_dump())
+            response = unauthenticated_api_manager.auth_api.register_user(create_user_data)
 
         with allure.step("Сверяем с моделью models.base_models CreatedUser"):
             data = CreatedUser(**response.json())

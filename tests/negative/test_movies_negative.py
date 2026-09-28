@@ -1,8 +1,11 @@
-import pytest
 import allure
+import pytest
 from pytest_check import check
+
 from clients.api_manager import ApiManager
+
 from models.base_models import ApiError, CreateMovieData
+
 from entities.user import User
 
 @allure.epic("Негативные проверки фильтров Movies API")

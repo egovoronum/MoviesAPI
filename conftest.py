@@ -15,7 +15,7 @@ from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from entities.user import User
 from enums.roles import Roles
-from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel, PatchUserModel
+from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel, PatchUserModel, CreateMovieData
 from db_requester.db_helper import DBHelper
 from db_requester.db_client import get_db_session
 
@@ -35,7 +35,7 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 
 
 @pytest.fixture(scope="function")
-def oneshot_user():
+def oneshot_user() -> CreateUserData:
    
     password = fake.password(
         length=12,
@@ -52,34 +52,21 @@ def oneshot_user():
         "passwordRepeat": password,
     }
 
-    return register_data
+    model = CreateUserData.model_validate(register_data)
+
+    return model
 
 
 @pytest.fixture(scope="function")
 def create_user_data(oneshot_user) -> CreateUserData:
-    updated_data = oneshot_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
-
-    user = CreateUserData.model_validate(updated_data)
-
-    return user
+    return oneshot_user.model_copy(update={"verified": True, "banned": False})
 
 
 @pytest.fixture(scope="function")
 def create_admin_user_data(oneshot_user) -> CreateUserData:
-    updated_data = oneshot_user.copy()
-    updated_data.update({
-        "roles": ["USER", "ADMIN"],
-        "verified": True,
-        "banned": False
-    })
 
-    admin_user = CreateUserData(**updated_data)
-
-    return admin_user
+    return oneshot_user.model_copy(update={"roles": ["USER", "ADMIN"], "verified": True, "banned": False})
+    
 
 @pytest.fixture
 def user_session():
@@ -200,7 +187,7 @@ def super_admin(user_session) -> User:
 
 
 @pytest.fixture(scope="function")
-def oneshot_genre(super_admin):
+def oneshot_genre(super_admin:User) -> Generator[Genre, None, None]:
 
     data = {
         "name": f"{fake.word()} и точка!!!"
@@ -208,15 +195,15 @@ def oneshot_genre(super_admin):
 
     response = super_admin.api.movies_api.create_genre(data, expected_status=201)
 
-    genre = Genre(**response.json())
-    genre_id = genre.id
+    genre_model = Genre.model_validate(response.json())
+    genre_id = genre_model.id
 
-    yield genre
+    yield genre_model
     super_admin.api.movies_api.delete_genre(genre_id)
 
 
 @pytest.fixture(scope="function")
-def valid_movie_data(oneshot_genre) -> dict:
+def valid_movie_data(oneshot_genre: Genre) -> CreateMovieData:
 
     genre = oneshot_genre
     genre_id = genre.id
@@ -231,7 +218,9 @@ def valid_movie_data(oneshot_genre) -> dict:
         "genreId": genre_id    
     }
 
-    return data    
+    model = CreateMovieData.model_validate(data)
+
+    return model
 
 
 @pytest.fixture(scope="session")
@@ -251,26 +240,36 @@ def invalid_movie_data() -> dict:
     
 
 @pytest.fixture(scope="function")
-def oneshot_movie(super_admin, valid_movie_data):
+def oneshot_movie(
+    super_admin:User, 
+    valid_movie_data:CreateMovieData
+) -> Generator[Movie, None, None]:
 
-    response = super_admin.api.movies_api.create_movie(
-        valid_movie_data,
-        expected_status=201)
-    movie =  Movie(**response.json())
+    with allure.step("запрос на создание"):
+        response = super_admin.api.movies_api.create_movie(
+            valid_movie_data,
+            expected_status=201)
 
-    yield movie
-    super_admin.api.movies_api.delete_movie(movie.id, expected_status=200)
+    with allure.step("валидация модели"):
+        movie_model =  Movie.model_validate(response.json())
+
+        yield movie_model
+    with allure.step("teardown"):
+        super_admin.api.movies_api.delete_movie(movie_model.id, expected_status=200)
 
 
 @pytest.fixture(scope="function")
-def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
+def oneshot_movie_skip_teardown(
+    super_admin:User, 
+    valid_movie_data:CreateMovieData
+    ) -> Movie:
 
     response = super_admin.api.movies_api.create_movie(
         valid_movie_data,
         expected_status=201)
-    movie =  Movie(**response.json())
+    movie_model =  Movie.model_validate(response.json())
 
-    return movie
+    return movie_model
 
 @pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
