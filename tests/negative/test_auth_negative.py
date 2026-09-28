@@ -27,6 +27,8 @@ class TestNegativeAuthAPI:
             get_user: int
         ):
 
+        allure.dynamic.title(f"Проверка доступов к DELETE MOVIE {user} {status}")
+
         client = request.getfixturevalue(user)
 
         with allure.step(f"делаем запрос от лица {user}"):    
