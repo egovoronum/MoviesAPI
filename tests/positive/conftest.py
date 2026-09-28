@@ -5,7 +5,7 @@ from entities.user import User
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
-from models.base_models import Movie, LoginData, ValidFilterParams, Genre, GenreList, CreateGenreData, CreateReviewData
+from models.base_models import Movie, LoginData, ValidFilterParams, Genre, GenreList, CreateGenreData, CreateReviewData, CreateMovieData
 from typing import Generator
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
@@ -230,13 +230,15 @@ def new_movie_data(unauthenticated_api_manager):
         "genreId": genre_id  
     }
 
-    return data
+    model = CreateMovieData.model_validate(data)
+
+    return model
 
 
 @pytest.fixture(scope="function")
 def create_test_movie(
     super_admin: User,
-    new_movie_data: dict):
+    new_movie_data: CreateMovieData):
 
     response = super_admin.api.movies_api.create_movie(
         new_movie_data,
@@ -254,7 +256,7 @@ def create_test_movie(
 @pytest.fixture(scope="function")
 def create_test_movie_no_teardown(
     super_admin: User,
-    new_movie_data: dict) -> Movie:
+    new_movie_data: CreateMovieData) -> Movie:
 
     response = super_admin.api.movies_api.create_movie(
         new_movie_data,
@@ -263,7 +265,9 @@ def create_test_movie_no_teardown(
 
     data = response.json()
 
-    return Movie(**data)
+    model = Movie.model_validate(data)
+
+    return model
 
 
 @pytest.fixture(scope="function")

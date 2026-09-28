@@ -2,6 +2,7 @@ from custom_requester.custom_requester import CustomRequester
 import requests
 import allure
 from constants import BASE_URL
+from models.base_models import CreateMovieData
 
 class MoviesAPI(CustomRequester):
     def __init__(self, session: requests.Session):
@@ -26,11 +27,11 @@ class MoviesAPI(CustomRequester):
         )
 
     @allure.step("Создать новый фильм")
-    def create_movie(self, movie_data:dict, expected_status=200):
+    def create_movie(self, movie_data:CreateMovieData, expected_status=200):
         return self.send_request(
             method="POST",
             endpoint=f"/movies",
-            data=movie_data,
+            data=movie_data.model_dump(),
             expected_status=expected_status
         )
 

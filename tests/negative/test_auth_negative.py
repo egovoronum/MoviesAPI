@@ -3,6 +3,7 @@ import allure
 from pytest_check import check
 from models.base_models import ApiError
 from entities.user import User
+from uuid import UUID
 
 @allure.epic("Негативная проверка AUTH API")
 class TestNegativeAuthAPI:
@@ -20,12 +21,12 @@ class TestNegativeAuthAPI:
     ("common_user", 403),
 ], ids=["SUPER ADMIN", "ADMIN USER", "COMMON USER"])
     def test_get_user_info_access_denied(
-            self,
-            request,
-            user: User,
-            status: int,
-            get_user: int
-        ):
+        self,
+        request,
+        user: User,
+        status: int,
+        get_user: UUID
+    ) -> None:
 
         allure.dynamic.title(f"Проверка доступов к DELETE MOVIE {user} {status}")
 

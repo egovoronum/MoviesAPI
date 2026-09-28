@@ -87,7 +87,7 @@ class TestMovieFilters:
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
             check.equal(e.error, "Bad Request", "ожидался другой error")
-            check.equal(e.message, "Поле page имеет минимальную величину 1", "ожидался другой message")
+            check.equal(e.message[0], "Поле page имеет минимальную величину 1", "ожидался другой message")
             
 
     @allure.title("Фильтр локации с невалидным значением")
@@ -134,15 +134,18 @@ class TestEditMovies:
         invalid_movie_id: int
     ) -> None:
 
-        response = common_user.api.movies_api.get_movie(
-            invalid_movie_id, 
-            expected_status=404
-        )
+        with allure.step("Отправляем запрос на создание"):
+            response = common_user.api.movies_api.get_movie(
+                invalid_movie_id, 
+                expected_status=404
+            )
 
-        e = ApiError(**response.json())
+        with allure.step("Сверяем ошибку с моделью"):
+            e = ApiError(**response.json())
 
-        check.equal(e.error, "Not Found", "ожидался другой error")
-        check.equal(e.message, "Фильм не найден", "ожидался другой message")
+        with allure.step("Проверяем error и message поля"):
+            check.equal(e.error, "Not Found", "ожидался другой error")
+            check.equal(e.message, "Фильм не найден", "ожидался другой message")
 
 
     @allure.title("Проверка создания фильма с невалидными данными (ожидается 400)")
@@ -155,18 +158,21 @@ class TestEditMovies:
     def test_create_invalid_movie(
         self,
         super_admin: User,
-        invalid_movie_data: dict
+        invalid_movie_data: CreateMovieData
     ) -> None:
 
-        response = super_admin.api.movies_api.create_movie(
-            invalid_movie_data,
-            expected_status=400
-        )
+        with allure.step("Отправляем запрос на создание"):
+            response = super_admin.api.movies_api.create_movie(
+                invalid_movie_data,
+                expected_status=400
+            )
 
-        e = ApiError(**response.json())
+        with allure.step("Сверяем ошибку с моделью"):
+            e = ApiError.model_validate(response.json())
 
-        check.equal(e.error, "Bad Request", "ожидался другой error")
-        check.equal(e.message[0], "Поле location должно быть одним из: MSK, SPB", "ожидался другой message")
+        with allure.step("Проверяем error и message поля"):
+            check.equal(e.error, "Bad Request", "ожидался другой error")
+            check.equal(e.message[0], "Поле location должно быть одним из: MSK, SPB", "ожидался другой message")
         
 
     @allure.title("Проверка может ли USER создать фильм (ожидается 403)")
@@ -179,19 +185,20 @@ class TestEditMovies:
     def test_create_as_common_user(
         self,
         common_user: User,
-        valid_movie_data: dict
+        valid_movie_data: CreateMovieData
     ) -> None:
 
-        CreateMovieData(**valid_movie_data)
+        with allure.step("Отправляем запрос на создание"):
+            response = common_user.api.movies_api.create_movie(
+                valid_movie_data,
+                expected_status=403
+            )
 
-        response = common_user.api.movies_api.create_movie(
-            valid_movie_data,
-            expected_status=403
-        )
+        with allure.step("Сверяем ошибку с моделью"):
+            e = ApiError.model_validate(response.json())
 
-        e = ApiError(**response.json())
-        
-        check.equal(e.error, "Forbidden", "ожидался другой error")
-        check.equal(e.message, "Forbidden resource", "ожидался другой message")
-        
+        with allure.step("проверяем error и message поля"):
+            check.equal(e.error, "Forbidden", "ожидался другой error")
+            check.equal(e.message, "Forbidden resource", "ожидался другой message")
+            
 
