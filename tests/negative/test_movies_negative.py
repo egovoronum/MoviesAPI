@@ -15,10 +15,10 @@ class TestMovieFilters:
         """)
     @pytest.mark.validation
     def test_invalid_price_filter(
-            self,
-            unauthenticated_api_manager: ApiManager,
-            invalid_price_filter_reversed: dict
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager,
+        invalid_price_filter_reversed: dict
+    ) -> None:
 
         with allure.step("Делаем запрос без аутентификации"):
             response = unauthenticated_api_manager.movies_api.get_movies(
@@ -30,9 +30,8 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            with check:
-                check.equal(e.error, "Bad Request", "ожидался другой error")
-                check.equal(e.message, "minPrice must be less than maxPrice", "ожидался другой message")
+            check.equal(e.error, "Bad Request", "ожидался другой error")
+            check.equal(e.message, "minPrice must be less than maxPrice", "ожидался другой message")
 
 
     @allure.title("Фильтр цены с негативным значением")
@@ -45,10 +44,10 @@ class TestMovieFilters:
     @pytest.mark.edgecases
     @pytest.mark.validation
     def test_negative_price_filter(
-            self,
-            unauthenticated_api_manager: ApiManager, 
-            invalid_price_filter_negative_min: dict
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager, 
+        invalid_price_filter_negative_min: dict
+    ) -> None:
 
         with allure.step("Делаем запрос без аутентификации"):
             response = unauthenticated_api_manager.movies_api.get_movies(
@@ -60,9 +59,8 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            with check:
-                check.equal(e.error, "Bad Request", "ожидался другой error")
-                check.equal(e.message[0], "Поле minPrice имеет минимальную величину 1", "ожидался другой message")
+            check.equal(e.error, "Bad Request", "ожидался другой error")
+            check.equal(e.message[0], "Поле minPrice имеет минимальную величину 1", "ожидался другой message")
 
 
     @allure.title("Фильтр пагинации с негативным значением")
@@ -73,10 +71,10 @@ class TestMovieFilters:
     @pytest.mark.edgecases
     @pytest.mark.validation
     def test_negative_page_filter(
-            self,
-            unauthenticated_api_manager: ApiManager,
-            invalid_page: dict
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager,
+        invalid_page: dict
+    ) -> None: 
 
         with allure.step("Делаем запрос без аутентификации"):
             response = unauthenticated_api_manager.movies_api.get_movies(
@@ -88,9 +86,8 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            with check:
-                check.equal(e.error, "Bad Request", "ожидался другой error")
-                check.equal(e.message, "Поле page имеет минимальную величину 1", "ожидался другой message")
+            check.equal(e.error, "Bad Request", "ожидался другой error")
+            check.equal(e.message, "Поле page имеет минимальную величину 1", "ожидался другой message")
             
 
     @allure.title("Фильтр локации с невалидным значением")
@@ -103,10 +100,10 @@ class TestMovieFilters:
         """)
     @pytest.mark.validation
     def test_invalid_location_filter(
-            self,
-            unauthenticated_api_manager: ApiManager,
-            invalid_location: dict       
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager,
+        invalid_location: dict       
+    ) -> None:
 
         with allure.step("Делаем запрос без аутентификации"):            
             response = unauthenticated_api_manager.movies_api.get_movies(
@@ -118,8 +115,7 @@ class TestMovieFilters:
             e = ApiError(**response.json())
 
         with allure.step("Ожидаем 400 в ответе и проверяем ожидаемый message"):
-            with check:
-                check.equal(e.error, "Bad Request", "ожидался другой message")
+            check.equal(e.error, "Bad Request", "ожидался другой message")
 
 
 @allure.epic("Негативные проверки Movies API")
@@ -133,10 +129,10 @@ class TestEditMovies:
         """)
     @pytest.mark.regression
     def test_get_404movie(
-            self,
-            common_user: User,
-            invalid_movie_id: int
-        ):
+        self,
+        common_user: User,
+        invalid_movie_id: int
+    ) -> None:
 
         response = common_user.api.movies_api.get_movie(
             invalid_movie_id, 
@@ -145,9 +141,8 @@ class TestEditMovies:
 
         e = ApiError(**response.json())
 
-        with check:
-            check.equal(e.error, "Not Found", "ожидался другой error")
-            check.equal(e.message, "Фильм не найден", "ожидался другой message")
+        check.equal(e.error, "Not Found", "ожидался другой error")
+        check.equal(e.message, "Фильм не найден", "ожидался другой message")
 
 
     @allure.title("Проверка создания фильма с невалидными данными (ожидается 400)")
@@ -158,10 +153,10 @@ class TestEditMovies:
     """)
     @pytest.mark.regression
     def test_create_invalid_movie(
-            self,
-            super_admin: User,
-            invalid_movie_data: dict
-        ):
+        self,
+        super_admin: User,
+        invalid_movie_data: dict
+    ) -> None:
 
         response = super_admin.api.movies_api.create_movie(
             invalid_movie_data,
@@ -170,9 +165,8 @@ class TestEditMovies:
 
         e = ApiError(**response.json())
 
-        with check:
-            check.equal(e.error, "Bad Request", "ожидался другой error")
-            check.equal(e.message[0], "Поле location должно быть одним из: MSK, SPB", "ожидался другой message")
+        check.equal(e.error, "Bad Request", "ожидался другой error")
+        check.equal(e.message[0], "Поле location должно быть одним из: MSK, SPB", "ожидался другой message")
         
 
     @allure.title("Проверка может ли USER создать фильм (ожидается 403)")
@@ -183,10 +177,10 @@ class TestEditMovies:
         """)
     @pytest.mark.accesscontrol
     def test_create_as_common_user(
-            self,
-            common_user: User,
-            valid_movie_data: dict
-        ):
+        self,
+        common_user: User,
+        valid_movie_data: dict
+    ) -> None:
 
         CreateMovieData(**valid_movie_data)
 
@@ -197,8 +191,7 @@ class TestEditMovies:
 
         e = ApiError(**response.json())
         
-        with check:
-            check.equal(e.error, "Forbidden", "ожидался другой error")
-            check.equal(e.message, "Forbidden resource", "ожидался другой message")
+        check.equal(e.error, "Forbidden", "ожидался другой error")
+        check.equal(e.message, "Forbidden resource", "ожидался другой message")
         
 

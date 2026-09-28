@@ -15,7 +15,11 @@ class TestUsers:
         валидирует поля id, email, fullName, verified в ответе CreatedUser
         """)
     @pytest.mark.regression
-    def test_create_user(self, super_admin: User, create_user_data: CreateUserData):
+    def test_create_user(
+        self, 
+        super_admin: User, 
+        create_user_data: CreateUserData
+    ) -> None:
 
         with allure.step("Делаем запрос на создание юзера"):    
             response = super_admin.api.user_api.create_user(create_user_data)
@@ -36,7 +40,11 @@ class TestUsers:
         подтверждает совпадение id, email, fullName и verified между обоими запросами
         """)
     @pytest.mark.regression
-    def test_get_user_by_locator(self, super_admin:User, create_user_data:CreateUserData):
+    def test_get_user_by_locator(
+        self, 
+        super_admin:User, 
+        create_user_data:CreateUserData
+    ) -> None:
 
         with allure.step("Делаем запросы на создание юзера и GET по id и email"):
             created_user_response = super_admin.api.user_api.create_user(create_user_data).json()
@@ -61,10 +69,10 @@ class TestUsers:
         """)
     @pytest.mark.regression
     def test_register_user(
-            self,
-            unauthenticated_api_manager: ApiManager,
-            create_user_data: CreateUserData
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager,
+        create_user_data: CreateUserData
+    ) -> None:
 
         with allure.step("Делаем запрос на создание"):
             response = unauthenticated_api_manager.auth_api.register_user(create_user_data.model_dump())
@@ -87,10 +95,10 @@ class TestUsers:
         """)
     @pytest.mark.regression
     def test_admin_login(
-            self,
-            unauthenticated_api_manager: ApiManager,
-            admin_login: LoginData
-        ):
+        self,
+        unauthenticated_api_manager: ApiManager,
+        admin_login: LoginData
+    ) -> None:
 
         with allure.step("отправляем запрос с данными супер админа"):
             response = unauthenticated_api_manager.auth_api.login_user(
@@ -116,12 +124,12 @@ class TestUsers:
     ("common_user", 403),
 ], ids=["ADMIN USER", "COMMON USER"])
     def test_get_user_info(
-            self,
-            request,
-            user: User,
-            status,
-            get_user: UUID
-        ):
+        self,
+        request,
+        user: User,
+        status,
+        get_user: UUID
+    ) -> None:
 
         client = request.getfixturevalue(user)
 
@@ -145,10 +153,11 @@ class TestUsers:
         """)
     @pytest.mark.regression
     def test_delete_user(
-            self,
-            db_helper,
-            super_admin: User,
-            oneshot_user_id: UUID):
+        self,
+        db_helper,
+        super_admin: User,
+        oneshot_user_id: UUID
+    ) -> None:
 
         with allure.step("""
         Делаем запрос на удаление id, полученного от фикстуры oneshot_user_id через API

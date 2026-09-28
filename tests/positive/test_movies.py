@@ -80,7 +80,7 @@ class TestMovies:
             self,
             common_user: User,
             grab_movie: int
-        ):
+        ) -> None:
 
         with allure.step("Делаем запрос на получение фильма по id"):
             response = common_user.api.movies_api.get_movie(
@@ -434,7 +434,7 @@ class TestReviews:
             super_admin: User,
             movie_id: int,
             generate_review: CreateReviewData
-        ):
+        ) -> None:
 
         with allure.step("Запрос на создание со словарем из фикстуры"):    
             response = super_admin.api.movies_api.post_review(
@@ -468,7 +468,7 @@ class TestReviews:
             common_user: User,
             movie_id: int,
             generate_review: CreateReviewData
-        ):
+        ) -> None:
 
         with allure.step("отправляем запрос"):
             response = common_user.api.movies_api.post_review(
@@ -499,7 +499,7 @@ def test_patch_random_movie(
         super_admin: User,
         grab_movie: int, 
         patch_movie: dict
-    ):
+    ) -> None:
 
     response = super_admin.api.movies_api.patch_movie(
         patch_movie,
