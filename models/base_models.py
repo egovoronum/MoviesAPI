@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Optional, Literal, Union, List
 from enums.roles import Roles
 from enums.locations import Locations
@@ -78,12 +78,31 @@ class Location(str, Enum):
     MSK = "MSK"
     SPB = "SPB"
 
+class CreateGenreData(BaseModel):
+    name: str
+    id: Optional[int] = None
+
 class Genre(BaseModel):
     name: str
     id: Optional[int] = None
 
+class GenreList(RootModel[list[Genre]]):
+    def __iter__(self): # type: ignore[override]
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
 class ReviewUser(BaseModel):
     fullName: str
+
+class CreateReviewData(BaseModel):
+    userId: Optional[str] = None
+    text: str
+    rating: int = Field(..., ge=0, le=5)
+    createdAt: Optional[datetime] = None
+    user: Optional[ReviewUser] = None
+    movieId: int | None = Field(default=None, exclude=True) 
 
 class Review(BaseModel):
     userId: str
@@ -91,6 +110,7 @@ class Review(BaseModel):
     rating: int = Field(..., ge=0, le=5)
     createdAt: datetime
     user: ReviewUser
+    movieId: int | None = Field(default=None, exclude=True) 
 
 class CreateMovieData(BaseModel):
     name: str

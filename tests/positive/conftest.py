@@ -1,14 +1,12 @@
 import requests, pytest, random, allure
 from utils.data_generator import DataGenerator
 from faker import Faker
+from entities.user import User
 from custom_requester.custom_requester import CustomRequester
 from dotenv import load_dotenv
 import os
-from models.base_models import Movie, LoginData, ValidFilterParams
-
-
-# *API classes import
-
+from models.base_models import Movie, LoginData, ValidFilterParams, Genre, GenreList, CreateGenreData, CreateReviewData
+from typing import Generator
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
 from clients.user_api import UserAPI
@@ -112,7 +110,7 @@ def prepared_user():
 
     return register_data
 
-#* prepare oneshot user
+
 @pytest.fixture(scope="function")
 def oneshot_user():
    
@@ -133,7 +131,7 @@ def oneshot_user():
 
     return register_data  
 
-#* register user
+
 @pytest.fixture(scope="session")
 def registered_user(
     unauthenticated_api_manager: ApiManager,
@@ -235,10 +233,10 @@ def new_movie_data(unauthenticated_api_manager):
 
 @pytest.fixture(scope="function")
 def create_test_movie(
-    admin_api_manager: ApiManager,
+    super_admin: User,
     new_movie_data: dict):
 
-    response = admin_api_manager.movies_api.create_movie(
+    response = super_admin.api.movies_api.create_movie(
         new_movie_data,
         expected_status=201
     )
@@ -248,12 +246,12 @@ def create_test_movie(
     yield data
 
     with allure.step("Teardown"):
-        admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+        super_admin.api.movies_api.delete_movie(data["id"], expected_status=200)
 
 
 @pytest.fixture(scope="function")
 def create_test_movie_no_teardown(
-    super_admin,
+    super_admin: User,
     new_movie_data: dict) -> Movie:
 
     response = super_admin.api.movies_api.create_movie(
@@ -376,7 +374,6 @@ def desc_filter() -> ValidFilterParams:
     return ValidFilterParams(**params)
 
 
-#* Prepares patch data for editing a movie
 @pytest.fixture(scope="function")
 def patch_movie():
 
@@ -393,18 +390,15 @@ def patch_movie():
     return data
 
 
-#* gets a list of random genres
 @pytest.fixture(scope="session")
-def get_genres(unauthenticated_api_manager):
+def get_genres(unauthenticated_api_manager: ApiManager) -> GenreList:
     
     response = unauthenticated_api_manager.movies_api.get_genres(
         expected_status=200
     )
-    data = response.json()
 
-    return data
+    return GenreList.model_validate(response.json())
 
-#* prepares an existing random genre ID 
 @pytest.fixture(scope="function")
 def random_genre(unauthenticated_api_manager):
     
@@ -418,17 +412,21 @@ def random_genre(unauthenticated_api_manager):
 
     return genre_id
 
-#* prepares random genre_data
+
 @pytest.fixture(scope="function")
-def genre_data(admin_api_manager):
+def genre_data(
+    admin_api_manager: ApiManager
+    ) -> Generator[CreateGenreData, None, None]:
 
     data = {
         "name": f"{fake.word()} усиленный {fake.word()}"
     }
 
-    yield data
+    model = CreateGenreData.model_validate(data)
 
-    genre_id = data["id"]
+    yield model
+
+    genre_id = model.id
 
     try:
         admin_api_manager.movies_api.delete_genre(
@@ -439,7 +437,7 @@ def genre_data(admin_api_manager):
         f"Failed to delete genre with ID at teardown: {genre_id}"
 
 
-#* Parses GET movies list until it finds a movie with a review
+
 @pytest.fixture(scope="function")
 def grab_movie_with_reviews(
     unauthenticated_api_manager: ApiManager,
@@ -481,21 +479,23 @@ def grab_movie_with_reviews(
 
     return movie_with_reviews
 
-#* POSTS a review to an existing movie
+
 @pytest.fixture(scope="function")
-def generate_review(super_admin):
+def generate_review(super_admin) -> Generator[CreateReviewData, None, None]:
     
     data = {
     "rating": 5,
     "text": f"Отличный фильм, вызывает {fake.word()}"
     }
 
-    yield data
+    model = CreateReviewData.model_validate(data)
+
+    yield model
 
     params = {}
 
-    params["movieId"] = data["movieId"]
-    params["userId"] = data["userId"]
+    params["movieId"] = model.movieId
+    params["userId"] = model.userId
 
     try:
         super_admin.api.movies_api.delete_review(

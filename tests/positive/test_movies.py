@@ -4,7 +4,7 @@ from pytest_check import check
 from utils.time_util import iso_now
 from faker import Faker
 fake = Faker("ru_RU")
-from models.base_models import Movie, ApiError, Genre, Review, ValidFilterParams, MoviesPage
+from models.base_models import Movie, ApiError, Genre, Review, ValidFilterParams, MoviesPage, GenreList, CreateGenreData, CreateReviewData
 from entities.user import User
 
 @allure.description("""
@@ -262,9 +262,9 @@ class TestParametrizedFilters:
     ], ids=["PRICE FILTER", "LOCATION FILTER", "GENRE FILTER"])
     def test_parametrized_movie_filters(
             self,
-            common_user,
+            common_user: User,
             filter_parameters
-        ):
+        ) -> None:
 
         common_user.api.movies_api.get_movies(
             params=filter_parameters,
@@ -282,7 +282,11 @@ class TestEditMovies:
         сверка созданного фильма с моделью Movie
         """)
     @pytest.mark.regression
-    def test_create_movie(self, create_test_movie):
+    def test_create_movie(
+        self, 
+        create_test_movie
+        ) -> None:
+
         with allure.step("сверяем созданный фильм с моделью"):
             Movie(**create_test_movie)
 
@@ -298,7 +302,7 @@ class TestEditMovies:
             db_helper,
             super_admin: User,
             create_test_movie_no_teardown: Movie
-        ):
+        ) -> None:
 
         with allure.step("Вынимаем ID фильма"):
             movie_id = create_test_movie_no_teardown.id
@@ -310,17 +314,14 @@ class TestEditMovies:
             )
 
         with allure.step("Сверяем, что API вернул нужный ID после DELETE"):
-            data = response.json()
-            assert movie_id == data["id"]
+            data = Movie(**response.json())
+            check.equal(movie_id, data.id, "ID не совпадают")
 
         with allure.step("Отправляем запрос в базу по удаленному API ID"):  
-            db_response = db_helper.get_movie_by_id(data["id"])
-            assert db_response is None, "DB_HELPER: movie не удален в базе"
-
-        # print(f"ID от API: {data["id"]}")
-        # print(f"ОТВЕТ ОТ БАЗЫ: {db_response}")
-        # print(create_test_movie_no_teardown)
-
+            db_response = db_helper.get_movie_by_id(data.id)
+            check.equal(db_response, None, "DB_HELPER: movie не удален в базе")
+            print(f"ОТВЕТ ОТ БАЗЫ: {db_response}")
+            
 
 @allure.epic("Работа с жанрами")
 @pytest.mark.regression
@@ -334,14 +335,16 @@ class TestGenres:
     @pytest.mark.regression
     def test_get_genres(
             self,
-            get_genres: dict
-        ):
+            get_genres: GenreList
+        ) -> None:
 
-        genres = get_genres
+        with allure.step("Список жанров не пустой"):
+            check.is_true(len(get_genres.root) > 0, "API вернул пустой список")
 
-        with allure.step("сверяем каждый жанр в словаре с моделью"):    
-            for genre in genres:
-                Genre(**genre)
+        with allure.step("id жанров уникальны"):
+            ids = [g.id for g in get_genres.root]
+            check.equal(len(ids), len(set(ids)))
+
 
     @allure.title("GET один жанр по ID")
     @allure.description("""
@@ -353,7 +356,7 @@ class TestGenres:
             self,
             common_user: User,
             random_genre: int,
-        ):
+        ) -> None:
 
         with allure.step("делаем запрос"):
             response = common_user.api.movies_api.get_genre(
@@ -375,18 +378,18 @@ class TestGenres:
     def test_create_random_genre(
             self,
             super_admin: User,
-            genre_data:dict
-        ):
+            genre_data:CreateGenreData
+        ) -> None:
 
         with allure.step("делаем запрос"):
             response = super_admin.api.movies_api.create_genre(
-                genre_data,
+                genre_data.model_dump(),
                 expected_status=201
             )
 
         with allure.step("сверяем жанр с моделью"):
-            data = Genre(**response.json())
-            genre_data["id"] = data.id
+            data = Genre.model_validate(response.json())
+            genre_data.id = data.id
 
 
     @allure.title("DELETE жанр")
@@ -399,7 +402,7 @@ class TestGenres:
             self,
             super_admin: User,
             random_genre: int
-        ):
+        ) -> None:
 
         genre_id = random_genre
 
@@ -410,7 +413,7 @@ class TestGenres:
             )
 
         with allure.step("сверяем ответ с моделью"):
-            Genre(**response.json())
+            Genre.model_validate(response.json())
 
 
 @allure.epic("Работа с отзывами")
@@ -427,28 +430,29 @@ class TestReviews:
     @pytest.mark.regression
     def test_post_movie_review_as_admin(
             self,
-            admin_user: User,
+            super_admin: User,
             movie_id: int,
-            generate_review: dict
+            generate_review: CreateReviewData
         ):
 
         with allure.step("Запрос на создание со словарем из фикстуры"):    
-            response = admin_user.api.movies_api.post_review(
+            response = super_admin.api.movies_api.post_review(
                 movie_id = movie_id,
-                data = generate_review,
+                data = generate_review.model_dump(exclude_none=True),
                 expected_status=201
             )
 
         with allure.step("Сверка с моделью"):    
-            data = Review(**response.json())
+            data = Review.model_validate(response.json())
 
         with allure.step("Сверяем текст и рейтинг созданного обзора с полученным словарем от фикстуры"):
-            assert generate_review["text"] == data.text
-            assert generate_review["rating"] == data.rating
+            check.equal(generate_review.text, data.text)
+            check.equal(generate_review.rating, data.rating)
 
         with allure.step("Передача параметров созданного обзора в teardown фикстуры"):    
-            generate_review["movieId"] = movie_id
-            generate_review["userId"] = data.userId
+            generate_review.userId = data.userId
+            generate_review.movieId = data.movieId
+
 
     @allure.title("POST отзыв (от common_user)")
     @allure.description("""
@@ -462,22 +466,26 @@ class TestReviews:
             self,
             common_user: User,
             movie_id: int,
-            generate_review: dict
+            generate_review: CreateReviewData
         ):
 
         with allure.step("отправляем запрос"):
             response = common_user.api.movies_api.post_review(
                 movie_id=movie_id,
-                data = generate_review,
+                data = generate_review.model_dump(exclude_none=True),
                 expected_status=201
             )
 
         with allure.step("сверяем ответ с моделью"):
-            data = Review(**response.json())
+            data = Review.model_validate(response.json())
+
+        with allure.step("Сверяем текст и рейтинг с полученным от фикстуры"):
+            check.equal(generate_review.text, data.text)
+            check.equal(generate_review.rating, data.rating)
 
         with allure.step("передаем данные в teardown фикстуры"):
-            generate_review["movieId"] = movie_id
-            generate_review["userId"] = data.userId
+            generate_review.movieId = movie_id
+            generate_review.userId = data.userId
 
 
 @allure.title("PATCH фильм (skip)")
