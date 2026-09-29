@@ -1,11 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, RootModel
+from typing import Optional, Literal, Union, List
 from enums.roles import Roles
+from enums.locations import Locations
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
 class ApiError(BaseModel):
-    message: str
+    message: str | list[str]
     error: str
     statusCode: int
 
@@ -18,16 +20,96 @@ class TestUser(BaseModel):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
+class CreateUserData(BaseModel):
+    id: Optional[str] = None
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=8, max_length=20)
+    passwordRepeat: str = Field(..., min_length=8, max_length=20)
+    roles: Optional[list[Roles]] = None
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class CreatedUser(BaseModel):
+    id: str
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    roles: list[Roles]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class PatchUserModel(BaseModel):
+    email: Optional[str] = Field(default=None, min_length=3)
+    fullName: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    roles: Optional[list[Roles]] = None
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class PatchResponseModel(BaseModel):
+    id: Optional[str] = None
+    email: str = Field(..., min_length=3)
+    fullName: str = Field(..., min_length=1, max_length=255)
+    roles: Optional[list[Roles]]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None
+
+class LoginData(BaseModel):
+    email: str = Field(..., min_length=3)
+    password: str = Field(..., min_length=8, max_length=20)
+
+class LoggedInUser(BaseModel):
+    user: CreatedUser
+    accessToken: str
+    refreshToken: Optional[UUID] = None  
+    expiresIn: int
+
+"""python
+пока оставляю minPrice/maxPrice без логики
+можно добавить 
+@model_validator(mode="after")
+    def check_page_le_page_size(self):
+        if self.page > self.pageSize:
+            raise ValueError("page must be <= pageSize")
+        return self
+"""
+class ValidFilterParams(BaseModel):
+    pageSize: int = Field(..., ge=1, le=50)
+    page: int = Field(..., ge=1, le=50)
+    minPrice: int = Field(..., ge=1, le=9999)
+    maxPrice: int = Field(..., ge=1, le=9999)
+    locations: Union[Locations, List[Locations]]
+    published: bool = True
+    createdAt: Literal["asc", "desc"] = "asc"
+
 class Location(str, Enum):
     MSK = "MSK"
     SPB = "SPB"
+
+class CreateGenreData(BaseModel):
+    name: str
+    id: Optional[int] = None
 
 class Genre(BaseModel):
     name: str
     id: Optional[int] = None
 
+class GenreList(RootModel[list[Genre]]):
+    def __iter__(self): # type: ignore[override]
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
 class ReviewUser(BaseModel):
     fullName: str
+
+class CreateReviewData(BaseModel):
+    userId: Optional[str] = None
+    text: str
+    rating: int = Field(..., ge=0, le=5)
+    createdAt: Optional[datetime] = None
+    user: Optional[ReviewUser] = None
+    movieId: int | None = Field(default=None, exclude=True) 
 
 class Review(BaseModel):
     userId: str
@@ -35,13 +117,23 @@ class Review(BaseModel):
     rating: int = Field(..., ge=0, le=5)
     createdAt: datetime
     user: ReviewUser
+    movieId: int | None = Field(default=None, exclude=True) 
+
+class CreateMovieData(BaseModel):
+    name: str
+    description: str
+    genreId: int
+    imageUrl: str
+    price: int
+    location: Location
+    published: bool
 
 class Movie(BaseModel):
     id: int
     name: str
     description: str
     genreId: int
-    imageUrl: str
+    imageUrl: Optional[str]
     price: int
     rating: float = Field(..., ge=0, le=5)
     location: Location

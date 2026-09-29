@@ -1,5 +1,3 @@
-# collections, roles, statuses, fixed strings, limits, timeouts, default values
-
 BASE_URL = "https://api.dev-cinescope.coconutqa.ru"
 AUTH_URL = "https://auth.dev-cinescope.coconutqa.ru"
 USER = "https://auth.dev-cinescope.coconutqa.ru/user"

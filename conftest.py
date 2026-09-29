@@ -4,18 +4,18 @@ import random
 
 # ─── доп библиотеки ────────────────────────────────────────────────────────
 import requests
-import pytest
+import pytest, allure
 from dotenv import load_dotenv
 from faker import Faker
 from sqlalchemy.orm import Session
 from typing import Generator
-
+from pytest_check import check
 # ─── модули проекта ────────────────────────────────────────────────────────────
 from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from entities.user import User
 from enums.roles import Roles
-from models.base_models import Movie, Genre
+from models.base_models import Movie, Genre, CreateUserData, CreatedUser, TestUser, PatchResponseModel, PatchUserModel, CreateMovieData
 from db_requester.db_helper import DBHelper
 from db_requester.db_client import get_db_session
 
@@ -35,7 +35,7 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 
 
 @pytest.fixture(scope="function")
-def oneshot_user() -> dict[str, str]:
+def oneshot_user() -> CreateUserData:
    
     password = fake.password(
         length=12,
@@ -52,18 +52,21 @@ def oneshot_user() -> dict[str, str]:
         "passwordRepeat": password,
     }
 
-    return register_data  
+    model = CreateUserData.model_validate(register_data)
+
+    return model
 
 
 @pytest.fixture(scope="function")
-def create_user_data(oneshot_user) -> dict:
-    updated_data = oneshot_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
-    return updated_data
+def create_user_data(oneshot_user) -> CreateUserData:
+    return oneshot_user.model_copy(update={"verified": True, "banned": False})
 
+
+@pytest.fixture(scope="function")
+def create_admin_user_data(oneshot_user) -> CreateUserData:
+
+    return oneshot_user.model_copy(update={"roles": ["USER", "ADMIN"], "verified": True, "banned": False})
+    
 
 @pytest.fixture
 def user_session():
@@ -81,36 +84,91 @@ def user_session():
         user.close_session()
 
 
-@pytest.fixture
-def common_user(user_session, super_admin: User, create_user_data: dict) -> User:
+@pytest.fixture(scope="function")
+def common_user(
+    user_session,
+    super_admin: User,
+    create_user_data: CreateUserData
+    ) -> Generator[User, None, None]:
+
     new_session = user_session()
 
     common_user = User(
-        create_user_data['email'],
-        create_user_data['password'],
+        create_user_data.email,
+        create_user_data.password,
         [Roles.USER],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
+    response = super_admin.api.user_api.create_user(create_user_data)
+
+    data = response.json()
+    new_common_user_id = data["id"]
+
     common_user.api.auth_api.authenticate(common_user.creds)
 
-    return common_user
+    yield common_user
+
+    with allure.step("tearing down common_user"):
+        super_admin.api.user_api.delete_user(
+            new_common_user_id,
+            expected_status=200
+            )
 
 
-@pytest.fixture
-def admin_user(user_session, super_admin: User, create_user_data: dict) -> User:
+@pytest.fixture(scope="function")
+def admin_user(
+    user_session,
+    super_admin: User,
+    create_admin_user_data: CreateUserData
+) -> Generator[User, None, None]:
+    
     new_session = user_session()
 
     admin_user = User(
-        create_user_data['email'],
-        create_user_data['password'],
+        create_admin_user_data.email,
+        create_admin_user_data.password,
         [Roles.ADMIN],
         new_session)
 
-    super_admin.api.user_api.create_user(create_user_data)
-    admin_user.api.auth_api.authenticate(admin_user.creds)
+    with allure.step("Создаем юзера по модели CreateUserData"):
+        response = super_admin.api.user_api.create_user(create_admin_user_data)
+        data = response.json()
 
-    return admin_user
+    with allure.step("сохраняем id для последующей передачи в teardown"):   
+        new_admin_id = data["id"]
+
+    with allure.step("""
+        Фикстура немного заморочена, т.к. своеобразный API у movies
+        создаем patch_data и делаем PATCH юзера
+        т.к. невозможно указать ROLES: ["ADMIN"] при создании!
+        """):   
+
+        patch_data = {
+            "roles": ["USER", "ADMIN"],
+            "verified": True,
+            "banned": False
+            }
+
+        patch_data_model = PatchUserModel.model_validate(patch_data)
+
+        with allure.step("Патчим юзера, чтобы получить админа"):    
+            patch_response = super_admin.api.user_api.patch_user(new_admin_id, patch_data_model)
+            admin_user_model = PatchResponseModel.model_validate(patch_response.json())
+
+        with allure.step("Убеждаемся что фикстура пропатчила и 'ADMIN' есть в roles"):
+            with check:
+                check.is_in("ADMIN", admin_user_model.roles, "у юзера нет роли ADMIN")
+        
+        with allure.step("логиним новоиспеченного админа"):    
+            admin_user.api.auth_api.authenticate(admin_user.creds)
+
+    yield admin_user
+
+    with allure.step("teardown админа"):
+        super_admin.api.user_api.delete_user(
+            new_admin_id,
+            expected_status=200
+            )
 
 
 @pytest.fixture
@@ -129,7 +187,7 @@ def super_admin(user_session) -> User:
 
 
 @pytest.fixture(scope="function")
-def oneshot_genre(super_admin):
+def oneshot_genre(super_admin:User) -> Generator[Genre, None, None]:
 
     data = {
         "name": f"{fake.word()} и точка!!!"
@@ -137,15 +195,15 @@ def oneshot_genre(super_admin):
 
     response = super_admin.api.movies_api.create_genre(data, expected_status=201)
 
-    genre = Genre(**response.json())
-    genre_id = genre.id
+    genre_model = Genre.model_validate(response.json())
+    genre_id = genre_model.id
 
-    yield genre
+    yield genre_model
     super_admin.api.movies_api.delete_genre(genre_id)
 
 
 @pytest.fixture(scope="function")
-def valid_movie_data(oneshot_genre) -> dict:
+def valid_movie_data(oneshot_genre: Genre) -> CreateMovieData:
 
     genre = oneshot_genre
     genre_id = genre.id
@@ -160,7 +218,9 @@ def valid_movie_data(oneshot_genre) -> dict:
         "genreId": genre_id    
     }
 
-    return data    
+    model = CreateMovieData.model_validate(data)
+
+    return model
 
 
 @pytest.fixture(scope="session")
@@ -180,28 +240,38 @@ def invalid_movie_data() -> dict:
     
 
 @pytest.fixture(scope="function")
-def oneshot_movie(super_admin, valid_movie_data):
+def oneshot_movie(
+    super_admin:User, 
+    valid_movie_data:CreateMovieData
+) -> Generator[Movie, None, None]:
 
-    response = super_admin.api.movies_api.create_movie(
-        valid_movie_data,
-        expected_status=201)
-    movie =  Movie(**response.json())
+    with allure.step("запрос на создание"):
+        response = super_admin.api.movies_api.create_movie(
+            valid_movie_data,
+            expected_status=201)
 
-    yield movie
-    super_admin.api.movies_api.delete_movie(movie.id, expected_status=200)
+    with allure.step("валидация модели"):
+        movie_model =  Movie.model_validate(response.json())
+
+        yield movie_model
+    with allure.step("teardown"):
+        super_admin.api.movies_api.delete_movie(movie_model.id, expected_status=200)
 
 
 @pytest.fixture(scope="function")
-def oneshot_movie_skip_teardown(super_admin, valid_movie_data):
+def oneshot_movie_skip_teardown(
+    super_admin:User, 
+    valid_movie_data:CreateMovieData
+    ) -> Movie:
 
     response = super_admin.api.movies_api.create_movie(
         valid_movie_data,
         expected_status=201)
-    movie =  Movie(**response.json())
+    movie_model =  Movie.model_validate(response.json())
 
-    return movie
+    return movie_model
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
 
     db_session = get_db_session()
@@ -237,4 +307,19 @@ def db_movie_data(db_helper):
 
     if db_helper.get_movie_by_id(movie.id):
         db_helper.delete_movie(movie)
-    
+
+
+@pytest.fixture(scope="session")
+def get_user():
+
+    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
+
+    return user_id
+
+
+@pytest.fixture(scope="function")
+def invalid_movie_id():
+
+    id = random.randint(500000, 600000)
+
+    return id

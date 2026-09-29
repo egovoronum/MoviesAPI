@@ -5,6 +5,8 @@ python-dotenv
 requests
 faker
 pytest
+pytest-check
+pytest-rerunfailures
 pysocks
 pydantic
 typing

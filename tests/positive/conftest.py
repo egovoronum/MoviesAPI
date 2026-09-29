@@ -1,17 +1,31 @@
-import requests, pytest, random
-from utils.data_generator import DataGenerator
-from faker import Faker
-from custom_requester.custom_requester import CustomRequester
-from dotenv import load_dotenv
 import os
+from typing import Generator
 
-
-# *API classes import
+import requests
+import pytest
+import random
+import allure
+from dotenv import load_dotenv
+from faker import Faker
 
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
-from clients.user_api import UserAPI
-from clients.movies_api import MoviesAPI
+
+from models.base_models import (
+    Movie,
+    LoginData,
+    ValidFilterParams,
+    GenreList,
+    CreateGenreData,
+    CreateReviewData,
+    CreateMovieData,
+    CreateUserData,
+    CreatedUser,
+)
+
+from entities.user import User
+
+from utils.data_generator import DataGenerator
 
 load_dotenv()
 
@@ -27,7 +41,6 @@ ADMIN_PASSWORD = env_check("ADMIN_PASSWORD")
 fake = Faker("ru_RU")
 
 
-# session init 
 @pytest.fixture(scope="session")
 def session():
     http_session = requests.Session()
@@ -35,7 +48,6 @@ def session():
     http_session.close()
 
 
-# Admin API manager
 @pytest.fixture(scope="session")
 def admin_api_manager():
     
@@ -47,7 +59,7 @@ def admin_api_manager():
     
     http_session.close()
 
-#? обычный юзер 
+
 @pytest.fixture(scope="session")
 def user_api_manager(registered_user):
 
@@ -60,7 +72,6 @@ def user_api_manager(registered_user):
     http_session.close()
 
 
-# managing API for unauthenticated sessions
 @pytest.fixture(scope="session")
 def unauthenticated_api_manager():
 
@@ -71,34 +82,25 @@ def unauthenticated_api_manager():
     http_session.close()
     
 
-# login API
 @pytest.fixture(scope="session")
 def api_login(session):
 
     return AuthAPI(session)
 
 
-#* admin login data
 @pytest.fixture(scope="session")
-def admin_login():
+def admin_login() -> LoginData:
 
     login_data = {
         "email": ADMIN_EMAIL,
         "password": ADMIN_PASSWORD
     }
 
-    return login_data
+    model = LoginData.model_validate(login_data)
+
+    return model
 
 
-# *get user by id
-@pytest.fixture(scope="session")
-def get_user():
-
-    user_id = "734964ec-4d6a-4789-839f-75797141e73e"
-
-    return user_id
-
-#* prepare user and return registration payload for SESSION
 @pytest.fixture(scope="session")
 def prepared_user():
     
@@ -119,54 +121,32 @@ def prepared_user():
 
     return register_data
 
-#* prepare oneshot user
-@pytest.fixture(scope="function")
-def oneshot_user():
-   
-    password = fake.password(
-        length=12,
-        special_chars=False,
-        digits=True,
-        upper_case=True,
-        lower_case=True
-    )
 
-    register_data = {
-        "email": DataGenerator.generate_random_email(),
-        "fullName": fake.name(),
-        "password": password,
-        "passwordRepeat": password
-    }
-
-    return register_data  
-
-#* register user
 @pytest.fixture(scope="session")
 def registered_user(
     unauthenticated_api_manager: ApiManager,
     admin_api_manager: ApiManager,
-    prepared_user: dict
+    oneshot_user: CreateUserData
     ):
 
     response = unauthenticated_api_manager.auth_api.register_user(
-        user_data=prepared_user,
+        user_data=oneshot_user,
         expected_status=201
     )
 
-    created_user = response.json()
-    id = created_user["id"]
+    created_user = CreatedUser.model_validate(response.json())
+    id = created_user.id
 
-    data = [prepared_user["email"], prepared_user["password"]]
+    data = [oneshot_user.email, oneshot_user.password]
 
     yield data
 
     admin_api_manager.auth_api.delete_user(
-            id,
-            expected_status=200
-        )
+        id,
+        expected_status=200
+    )
 
 
-# *creates a test user + teardown
 @pytest.fixture(scope="function")
 def test_user(admin_api_manager: ApiManager):
 
@@ -199,28 +179,26 @@ def test_user(admin_api_manager: ApiManager):
             expected_status=200
         )
 
-# user deletion
+
 @pytest.fixture(scope="function")
-def test_user_deletion(unauthenticated_api_manager: ApiManager,
-                       oneshot_user: dict
-                       ):
+def oneshot_user_id(unauthenticated_api_manager: ApiManager,
+    oneshot_user: CreateUserData
+):
 
     response = unauthenticated_api_manager.auth_api.register_user(
-            user_data=oneshot_user,
-            expected_status=201
-        )
+        user_data=oneshot_user,
+        expected_status=201
+    )
 
     oneshot_user = response.json()
-    id = oneshot_user["id"]
+    id = oneshot_user.id
 
     return id
 
-    
-#* PREPARES NEW MOVIE DATA
+
 @pytest.fixture(scope="function")
 def new_movie_data(unauthenticated_api_manager):
 
-    #grab existing random genre first to avoid error
     response = unauthenticated_api_manager.movies_api.get_genres(
         expected_status=200
     )
@@ -239,28 +217,47 @@ def new_movie_data(unauthenticated_api_manager):
         "genreId": genre_id  
     }
 
-    return data
+    model = CreateMovieData.model_validate(data)
 
-#* CREATES NEW MOVIE & tears it down
+    return model
+
+
 @pytest.fixture(scope="function")
 def create_test_movie(
-    admin_api_manager: ApiManager,
-    new_movie_data: dict):
+    super_admin: User,
+    new_movie_data: CreateMovieData
+) -> Generator[Movie, None, None]:
 
-    response = admin_api_manager.movies_api.create_movie(
+    response = super_admin.api.movies_api.create_movie(
+        new_movie_data,
+        expected_status=201
+    )
+
+    model = Movie.model_validate(response.json())
+
+    yield model
+
+    with allure.step("Teardown"):
+        super_admin.api.movies_api.delete_movie(model.id, expected_status=200)
+
+
+@pytest.fixture(scope="function")
+def create_test_movie_no_teardown(
+    super_admin: User,
+    new_movie_data: CreateMovieData) -> Movie:
+
+    response = super_admin.api.movies_api.create_movie(
         new_movie_data,
         expected_status=201
     )
 
     data = response.json()
 
-    yield data
+    model = Movie.model_validate(data)
 
-    #teardown
-    admin_api_manager.movies_api.delete_movie(data["id"], expected_status=200)
+    return model
 
 
-# *grabs movie ID from create_test_movie
 @pytest.fixture(scope="function")
 def movie_id(create_test_movie):
 
@@ -268,15 +265,7 @@ def movie_id(create_test_movie):
 
     return id
 
-#* grabs invalid movie ID
-@pytest.fixture(scope="function")
-def invalid_movie_id():
 
-    id = random.randint(500000, 600000)
-
-    return id
-
-# *finds an existing movie and grabs ID
 @pytest.fixture(scope="function")
 def grab_movie(unauthenticated_api_manager, valid_filter_params):
 
@@ -286,16 +275,16 @@ def grab_movie(unauthenticated_api_manager, valid_filter_params):
     )
 
     data = response.json()
-
     movies = data["movies"]
 
     if len(movies) < 1:
         raise RuntimeError("Couldn't grab as movie list length is less than 1!")
     
-    movie = movies[1]
+    movie = movies[0]
     id = movie["id"]
 
     return id
+
 
 @pytest.fixture(scope="session")
 def filter_parameters():
@@ -311,9 +300,9 @@ def filter_parameters():
 
     return parameters
 
-# *prepares general valid filter parameters for /movies
+
 @pytest.fixture(scope="function")
-def valid_filter_params():
+def valid_filter_params() -> ValidFilterParams:
 
     params = {
         "pageSize": 10,
@@ -324,13 +313,13 @@ def valid_filter_params():
         "published": True,
         "createdAt": "asc"
     }
-
-    return params
+    
+    return ValidFilterParams(**params)
 
 
 # *prepares valid price filter parameters for /movies
 @pytest.fixture(scope="function")
-def valid_price_filter():
+def valid_price_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(1, 10),
@@ -342,12 +331,12 @@ def valid_price_filter():
         "createdAt": "asc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
 #* Prepares ascending filter for movies
 @pytest.fixture(scope="function")
-def asc_filter():
+def asc_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(5, 10),
@@ -359,12 +348,12 @@ def asc_filter():
         "createdAt": "asc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
 #* Prepares descending filter for movies
 @pytest.fixture(scope="function")
-def desc_filter():
+def desc_filter() -> ValidFilterParams:
 
     params = {
         "pageSize": random.randint(5, 10),
@@ -376,10 +365,9 @@ def desc_filter():
         "createdAt": "desc"
     }
 
-    return params
+    return ValidFilterParams(**params)
 
 
-#* Prepares patch data for editing a movie
 @pytest.fixture(scope="function")
 def patch_movie():
 
@@ -396,18 +384,15 @@ def patch_movie():
     return data
 
 
-#* gets a list of random genres
 @pytest.fixture(scope="session")
-def get_genres(unauthenticated_api_manager):
+def get_genres(unauthenticated_api_manager: ApiManager) -> GenreList:
     
     response = unauthenticated_api_manager.movies_api.get_genres(
         expected_status=200
     )
-    data = response.json()
 
-    return data
+    return GenreList.model_validate(response.json())
 
-#* prepares an existing random genre ID 
 @pytest.fixture(scope="function")
 def random_genre(unauthenticated_api_manager):
     
@@ -421,17 +406,21 @@ def random_genre(unauthenticated_api_manager):
 
     return genre_id
 
-#* prepares random genre_data
+
 @pytest.fixture(scope="function")
-def genre_data(admin_api_manager):
+def genre_data(
+    admin_api_manager: ApiManager
+    ) -> Generator[CreateGenreData, None, None]:
 
     data = {
         "name": f"{fake.word()} усиленный {fake.word()}"
     }
 
-    yield data
+    model = CreateGenreData.model_validate(data)
 
-    genre_id = data["id"]
+    yield model
+
+    genre_id = model.id
 
     try:
         admin_api_manager.movies_api.delete_genre(
@@ -442,7 +431,7 @@ def genre_data(admin_api_manager):
         f"Failed to delete genre with ID at teardown: {genre_id}"
 
 
-#* Parses GET movies list until it finds a movie with a review
+
 @pytest.fixture(scope="function")
 def grab_movie_with_reviews(
     unauthenticated_api_manager: ApiManager,
@@ -484,24 +473,26 @@ def grab_movie_with_reviews(
 
     return movie_with_reviews
 
-#* POSTS a review to an existing movie
+
 @pytest.fixture(scope="function")
-def generate_review(admin_api_manager):
+def generate_review(super_admin) -> Generator[CreateReviewData, None, None]:
     
     data = {
     "rating": 5,
     "text": f"Отличный фильм, вызывает {fake.word()}"
     }
 
-    yield data
+    model = CreateReviewData.model_validate(data)
+
+    yield model
 
     params = {}
 
-    params["movieId"] = data["movieId"]
-    params["userId"] = data["userId"]
+    params["movieId"] = model.movieId
+    params["userId"] = model.userId
 
     try:
-        admin_api_manager.movies_api.delete_review(
+        super_admin.api.movies_api.delete_review(
             params=params,
             expected_status=200
         )

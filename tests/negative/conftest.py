@@ -1,17 +1,25 @@
-import requests, pytest, random
-from constants import (
-    BASE_URL, HEADERS, LOGIN_ENDPOINT, LOGOUT_ENDPOINT, 
-    REGISTER_ENDPOINT, MOVIES_ENDPOINT, AUTH_URL
-)
-from utils.data_generator import DataGenerator
-from faker import Faker
-from custom_requester.custom_requester import CustomRequester
-from dotenv import load_dotenv
 import os
+
+import requests
+import pytest
+import random
+from dotenv import load_dotenv
+from faker import Faker
+
+from constants import (
+    BASE_URL,
+    HEADERS,
+    LOGIN_ENDPOINT,
+    LOGOUT_ENDPOINT,
+    REGISTER_ENDPOINT,
+    MOVIES_ENDPOINT,
+    AUTH_URL,
+)
+
+from custom_requester.custom_requester import CustomRequester
 
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
-from clients.user_api import UserAPI
 
 load_dotenv()
 
@@ -47,7 +55,7 @@ def admin_api_manager():
     
     http_session.close()
 
-#? нигде не юзаю... managing API 
+
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
@@ -63,14 +71,12 @@ def unauthenticated_api_manager():
     http_session.close()
     
 
-# login API
 @pytest.fixture(scope="session")
 def api_login(session):
 
     return AuthAPI(session)
 
 
-# !prepares an invalid price filter minPrice>maxPrice
 @pytest.fixture(scope="session")
 def invalid_price_filter_reversed():
     
@@ -87,7 +93,7 @@ def invalid_price_filter_reversed():
 
     return params
 
-# !prepares an invalid price filter minPrice is negative
+
 @pytest.fixture(scope="session")
 def invalid_price_filter_negative_min():
     
@@ -104,7 +110,7 @@ def invalid_price_filter_negative_min():
 
     return params
 
-#! prepares an invalid page value in filter
+
 @pytest.fixture(scope="session")
 def invalid_page():
 
@@ -121,12 +127,12 @@ def invalid_page():
 
     return params
 
-#! prepares an invalid location field in filter
-@pytest.fixture(scope="session")
+
+@pytest.fixture(scope="function")
 def invalid_location():
 
     params = {
-        "pageSize": random.randint(10, 20),
+        "pageSize": 1,
         "page": 1,
         "minPrice": 1,
         "maxPrice": 10000,
